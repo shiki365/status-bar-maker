@@ -67,7 +67,13 @@
     if (label && label.textContent.trim()) el.setAttribute("aria-label", label.textContent.trim());
   }
 
-  function afterChange(path) {
+  // dragging: a slider is still being dragged. Chromium drops the drag when rows around the slider
+  // appear, disappear or get rebuilt, so those updates wait for the "change" event on release.
+  function afterChange(path, dragging) {
+    if (dragging) {
+      updateOutputs();
+      return;
+    }
     if (path === "layout.count") {
       renderBarList();
       renderTester();
@@ -93,7 +99,7 @@
         const value = readInput(el);
         if (typeof value === "number" && !Number.isFinite(value)) return;
         setPath(el.dataset.bind, value);
-        afterChange(el.dataset.bind);
+        afterChange(el.dataset.bind, el.type === "range" && !commitAfter);
         if (commitAfter) noHistory ? scheduleSave() : commit();
         requestRender();
       };
