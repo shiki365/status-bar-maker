@@ -111,6 +111,20 @@
         ["texture", "質感", "select", [["none", "なし"], ["paper", "古い紙"], ["grain", "ざらつき"]]],
       ],
     },
+    frame: {
+      label: "全体の枠", desc: "名前・アイコン・バーをまとめて枠で囲みます。背景パネルと一緒にも、枠だけでも使えます。",
+      defaults: { on: false, style: "solid", width: 2, color: "#ffffff", alpha: 0.8, useCharColor: false, offset: 6, radius: 8, len: 16 },
+      controls: [
+        ["style", "線の種類", "select", [["solid", "一重線"], ["double", "二重線"], ["dashed", "点線"], ["glow", "光る線"], ["corners", "四隅だけ"], ["lineCorners", "細い線＋四隅"]]],
+        ["width", "太さ", "range", 1, 8, 1],
+        ["useCharColor", "キャラの色にする", "check"],
+        ["color", "色", "color", null, null, null, null, "decos.frame.useCharColor=false"],
+        ["alpha", "濃さ", "range", 0.05, 1, 0.05, "pct"],
+        ["offset", "中身との間", "range", -12, 24, 1],
+        ["radius", "角丸", "range", 0, 40, 1, null, "decos.frame.style=solid|double|dashed|glow"],
+        ["len", "四隅の長さ", "range", 4, 60, 1, null, "decos.frame.style=corners|lineCorners"],
+      ],
+    },
     gloss: {
       label: "光沢", desc: "バーの上半分に光を乗せます。",
       defaults: { on: false, alpha: 0.3 },
@@ -178,7 +192,7 @@
       color: "#f2efe6", subColor: "#f2efe6", subAlpha: 0.7, labelByBar: false,
       outline: "shadow", outlineColor: "#000000", outlineAlpha: 0.9, outlineW: 2, showLabel: true, valueMode: "both" },
     name: { pos: "top", style: "plate", font: "notosans", weight: 700, size: 17, color: "#f2efe6", bg: "#080a0e", bgAlpha: 0.88,
-      accent: "#c8a45c", useCharColor: false, align: "left", vertical: false, overflow: "ellipsis", gap: 6 },
+      accent: "#c8a45c", useCharColor: false, align: "left", vertical: false, fitHeight: true, overflow: "ellipsis", gap: 6 },
     alert: { red80: true, redColor: "#ff5b5b", redBlink: false,
       lowOn: true, lowAt: 25, lowColor: "#ff3b3b", lowFill: false, lowPulse: true, lowBlink: false, lowShake: false, lowText: true,
       zeroOn: true, zeroGray: true, zeroBlink: false },
@@ -225,6 +239,7 @@
       name: { style: "underline", font: "shippori", weight: 800, size: 21, color: "#2b2118", accent: "#7a1f1a", gap: 8 },
       alert: { redColor: "#8a1a1a", lowColor: "#7a0f0f", lowPulse: false, lowBlink: true, lowText: true },
       decos: { panel: on({ color: "#e6d8b8", alpha: 0.96, radius: 2, borderW: 1, borderColor: "#5a4326", borderAlpha: 0.8, pad: 14, texture: "paper" }),
+        frame: on({ style: "lineCorners", width: 2, color: "#5a4326", alpha: 0.85, offset: -6, len: 18 }),
         grain: on({ alpha: 0.35 }) },
     },
     wafu: {
@@ -237,7 +252,8 @@
       text: { labelFont: "zenold", valueFont: "zenold", weight: 700, labelSize: 15, valueSize: 18, maxSize: 12, color: "#f1e6cc", subColor: "#f1e6cc" },
       name: { pos: "left", style: "text", vertical: true, font: "zenold", weight: 900, size: 22, color: "#f1e6cc", gap: 12 },
       alert: { lowColor: "#ff4a2a", redColor: "#ff7a5a" },
-      decos: { panel: on({ color: "#14110f", alpha: 0.86, radius: 0, borderW: 1, borderColor: "#c9a64a", borderAlpha: 0.7, pad: 12 }) },
+      decos: { panel: on({ color: "#14110f", alpha: 0.86, radius: 0, borderW: 1, borderColor: "#c9a64a", borderAlpha: 0.7, pad: 12 }),
+        frame: on({ style: "double", width: 1, color: "#c9a64a", alpha: 0.85, offset: 5, radius: 0 }) },
     },
     pop: {
       label: "ポップ", desc: "白ふちのカプセルに流れる斜線。丸ゴシックでにぎやかに。",

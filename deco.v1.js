@@ -5,13 +5,15 @@
  *   ctx.boxLayers.push({ image, size, position, repeat })   an overlay on the bar, clipped to its shape
  *   ctx.boxFilters.push("drop-shadow(...)")                  a filter on the bar box (outside the clip)
  *   Object.assign(ctx.rootDecls, {...})                      styles on the whole card (#root)
+ *   ctx.rootExtent = n                                       pixels drawn outside #root (added to its margin)
  *   ctx.w.add(selector, decls, softProps)                    any other rule
  *   ctx.keyframe(name, body)                                 a @keyframes block
  *
  * Pseudo-elements in use, so decorations don't collide:
  *   bar box ::after  = border + boxLayers (core)     fill ::before = sheen    fill ::after = tip
  *   row ::before     = icon (core)                   row ::after   = brackets
- *   #root ::before / ::after, side ::before, badge ::after = name (core)
+ *   #root ::before   = frame                         #root ::after = (free)
+ *   #root > div ::before / ::after, side ::before, badge ::after = name (core)
  */
 (function () {
   "use strict";
@@ -37,6 +39,55 @@
         border: o.borderW > 0 ? `${px(o.borderW)} solid ${rgba(o.borderColor, o.borderAlpha)}` : "none",
         "box-shadow": o.accentLine ? "inset 4px 0 0 var(--pc)" : "none",
       });
+    },
+
+    // A box around everything (#root::before), drawn outside the content without changing the layout.
+    frame(ctx, o) {
+      const { px, rgba } = ctx;
+      const color = o.useCharColor
+        ? (o.alpha >= 1 ? "var(--pc)" : `color-mix(in srgb, var(--pc) ${Math.round(o.alpha * 100)}%, transparent)`)
+        : rgba(o.color, o.alpha);
+      const w = Math.max(1, o.width);
+      const corners = thick => {
+        const bar = (pos, size) => `linear-gradient(${color}, ${color}) ${pos} / ${size} no-repeat`;
+        return ["left top", "right top", "left bottom", "right bottom"]
+          .flatMap(pos => [bar(pos, `${px(o.len)} ${px(thick)}`), bar(pos, `${px(thick)} ${px(o.len)}`)]).join(", ");
+      };
+      const decls = {
+        content: '""', position: "absolute", top: px(-o.offset), right: px(-o.offset), bottom: px(-o.offset), left: px(-o.offset),
+        "box-sizing": "border-box", "border-radius": px(Math.max(0, o.radius)), "pointer-events": "none",
+        border: "none", background: "none", "box-shadow": "none",
+      };
+      let thick = w;
+      switch (o.style) {
+        case "double":
+          thick = Math.max(3, w * 3);
+          decls.border = `${px(thick)} double ${color}`;
+          break;
+        case "dashed":
+          decls.border = `${px(w)} dashed ${color}`;
+          break;
+        case "glow":
+          decls.border = `${px(w)} solid ${color}`;
+          decls["box-shadow"] = `0 0 ${px(w * 5)} ${color}, inset 0 0 ${px(w * 4)} ${color}`;
+          thick = w * 6;
+          break;
+        case "corners":
+          decls.background = corners(w);
+          decls["border-radius"] = "0";
+          break;
+        case "lineCorners":
+          thick = w * 2;
+          decls.border = `${px(Math.max(1, w / 2))} solid ${color}`;
+          decls.background = corners(w * 2);
+          decls["background-origin"] = "border-box";
+          decls["border-radius"] = "0";
+          break;
+        default:
+          decls.border = `${px(w)} solid ${color}`;
+      }
+      ctx.w.add("#root::before", decls);
+      ctx.rootExtent = Math.max(ctx.rootExtent, o.offset + thick);
     },
 
     gloss(ctx, o) {

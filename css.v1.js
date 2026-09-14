@@ -147,14 +147,19 @@
     const textH = Math.ceil(Math.max(T.showLabel ? T.labelSize : 0, T.valueMode !== "none" ? T.valueSize : 0) * 1.15);
     const stacked = L.textLayout === "above" || L.textLayout === "below";
     const rowH = stacked ? textH + L.textGap + L.height : L.textLayout === "overlay" ? L.height : Math.max(L.height, textH);
-    let barsW = L.width;
-    if (L.direction === "row") barsW = count * L.width + (count - 1) * L.gap;
+    let barsW = L.width, barsH = count * rowH + (count - 1) * L.gap;
+    if (L.direction === "row") {
+      barsW = count * L.width + (count - 1) * L.gap;
+      barsH = rowH;
+    }
     if (L.direction === "grid") {
-      const cols = Math.min(L.columns, count);
+      const cols = Math.min(L.columns, count), rows = Math.ceil(count / cols);
       barsW = cols * L.width + (cols - 1) * L.gap;
+      barsH = rows * rowH + (rows - 1) * L.gap;
     }
     const itemW = !A.show ? barsW : A.pos === "top" ? Math.max(A.w, barsW) : A.w + A.gap + barsW;
-    return { count, iconCol, qW, textH, rowH, barsW, itemW };
+    const itemH = !A.show ? barsH : A.pos === "top" ? A.h + A.gap + barsH : Math.max(A.h, barsH);
+    return { count, iconCol, qW, textH, rowH, barsW, barsH, itemW, itemH };
   }
 
   function rowTemplate(st, g) {
@@ -195,12 +200,13 @@
 
   function nameRules(ctx, w) {
     const { st, g } = ctx, N = st.name, T = st.text, B = st.bar, A = st.avatar;
-    const host = { top: "#root::before", bottom: "#root::after", left: "#root::before", barsTop: `${SEL.side}::before`, avatar: `${SEL.badge}::after` }[N.pos];
+    // #root's own pseudo-elements are left free for decorations (the frame).
+    const host = { top: `${SEL.wrap}::before`, bottom: `${SEL.wrap}::after`, left: `${SEL.wrap}::before`, barsTop: `${SEL.side}::before`, avatar: `${SEL.badge}::after` }[N.pos];
     const width = { top: g.itemW, bottom: g.itemW, barsTop: g.barsW, avatar: A.w }[N.pos];
     const accent = N.useCharColor ? "var(--pc)" : N.accent;
     const auto = N.style === "tab" || N.style === "badge";
     const decls = {
-      content: "var(--name)", display: "block", margin: "0",
+      content: "var(--name)", display: "block", margin: "0", "box-sizing": "border-box",
       "font-family": family(N.font), "font-size": px(N.size), "font-weight": weightOf(N.font, N.weight),
       color: N.color, "line-height": "1.3", "letter-spacing": "0.04em", "font-feature-settings": '"palt"', "text-align": N.align,
       "text-shadow": N.style === "text" || N.style === "underline" ? textShadow(T) : T.outline === "none" ? "none" : "0 1px 2px rgba(0, 0, 0, 0.55)",
@@ -215,7 +221,12 @@
     }[N.style] || {});
 
     if (N.pos === "left") {
-      Object.assign(decls, { "white-space": "nowrap" }, N.vertical ? { "writing-mode": "vertical-rl" } : {});
+      Object.assign(decls, { "white-space": "nowrap" });
+      if (N.vertical) {
+        decls["writing-mode"] = "vertical-rl";
+        // A long vertical name wraps into a second column instead of growing taller than the bars.
+        if (N.fitHeight) Object.assign(decls, { "white-space": "normal", "max-height": px(Math.max(g.itemH, N.size * 3)) });
+      }
     } else if (N.overflow === "wrap") {
       Object.assign(decls, { width: auto ? "auto" : px(width), "max-width": px(width), "white-space": "normal", "overflow-wrap": "anywhere" });
     } else if (N.overflow === "ellipsis") {
@@ -253,14 +264,15 @@
     };
     ctx.keyframe = (name, body) => ctx.keyframes.set(name, body);
 
+    // On CCFOLIA #root fills the page height; size it to its content so a panel ends with the bars.
     Object.assign(ctx.rootDecls, {
-      display: "flex", "flex-direction": showName && N.pos === "left" ? "row" : "column",
-      "align-items": showName && N.pos === "left" ? "center" : "flex-start",
-      gap: showName && ["top", "bottom", "left"].includes(N.pos) ? px(N.gap) : "0",
-      width: "max-content", margin: px(L.outer), padding: "0", position: "relative",
+      display: "block", width: "max-content", height: "auto", "min-height": "0", "max-height": "none",
+      "align-self": "flex-start", padding: "0", position: "relative",
     });
+    ctx.rootExtent = 0;
 
     if (window.BarDeco) window.BarDeco.decorate(ctx);
+    ctx.rootDecls.margin = px(L.outer + Math.max(0, ctx.rootExtent));
     const filters = [];
     if (B.shadow > 0) filters.push(`drop-shadow(0 2px 5px rgba(0, 0, 0, ${round(B.shadow)}))`);
     filters.push(...ctx.boxFilters);
@@ -279,7 +291,7 @@
       "   --------------------------------------------------------------------------",
       "   ■ ブラウザソースのURL",
       `       ${safeComment(opts.url || "https://ccfolia.com/rooms/{ルームID}/characters/{キャラクターID}")}`,
-      ...(opts.size ? ["   ■ ブラウザソースの大きさ", `       幅 ${opts.size.w} / 高さ ${opts.size.h}`] : []),
+      ...(opts.size ? ["   ■ ブラウザソースの大きさ", `       幅 ${opts.size.w} / 高さ ${opts.size.h}${opts.sizeNote ? `（${safeComment(opts.sizeNote)}）` : ""}`] : []),
       "   ■ ココフォリア側",
       "       キャラの「ステータス」の並び順が、上から1本目・2本目…の色になります。",
       "   ========================================================================== */",
@@ -301,7 +313,11 @@
 
     w.comment("全体の並び");
     w.add(SEL.root, ctx.rootDecls);
-    w.add(SEL.wrap, { margin: "0", padding: "0" });
+    const nameSide = showName && N.pos === "left";
+    w.add(SEL.wrap, {
+      display: "flex", "flex-direction": nameSide ? "row" : "column", "align-items": nameSide ? "center" : "flex-start",
+      gap: showName && ["top", "bottom", "left"].includes(N.pos) ? px(N.gap) : "0", margin: "0", padding: "0",
+    });
     w.add(SEL.item, {
       display: "flex", "flex-direction": A.show ? { left: "row", right: "row-reverse", top: "column" }[A.pos] : "row",
       "align-items": A.show && A.pos !== "top" ? "center" : "flex-start", gap: A.show ? px(A.gap) : "0", margin: "0", padding: "0",
@@ -354,7 +370,8 @@
     const tpl = rowTemplate(st, g);
     w.add(SEL.row, {
       display: "grid", "grid-template-areas": tpl.areas, "grid-template-columns": tpl.cols, "grid-template-rows": tpl.rows,
-      gap: "0", "align-items": "center", width: px(L.width), height: "auto", margin: "0", padding: "0", position: "relative", cursor: "default",
+      gap: "0", "align-items": "center", width: px(L.width), height: "auto", margin: "0", padding: "0", "box-sizing": "border-box",
+      position: "relative", cursor: "default",
     });
     w.add(SEL.row + PART.text, { display: "contents" });
 

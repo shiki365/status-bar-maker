@@ -15,10 +15,11 @@
     "1px 1px 0", "-1px -1px 0", "-1px 1px 0", "1px -1px 0", "0 1px 0", "0 -1px 0", "-1px 0 0", "1px 0 0",
   ].map(s => `${s} ${LIGHT}`).join(", ");
 
+  // Page-wide behavior seen in OBS (2026-09-14): #root fills the viewport height, and boxes
+  // use content-box sizing (padding adds to a set width). Reproduced so the preview breaks the same way.
   const BASE_CSS = `
-html { box-sizing: border-box; -webkit-font-smoothing: antialiased; }
-*, *::before, *::after { box-sizing: inherit; }
-body { margin: 0; color: rgba(0, 0, 0, 0.87); font-family: ${FONT}; font-size: 1rem; line-height: 1.5; background-color: #fff; }
+html, body, #root { height: 100%; }
+body { color: rgba(0, 0, 0, 0.87); font-family: ${FONT}; font-size: 1rem; line-height: 1.5; background-color: #fff; }
 .ccf-page { padding: 8px; }
 .ccf-item { margin-bottom: 16px; display: flex; align-items: flex-start; }
 .MuiBadge-root { position: relative; display: inline-flex; vertical-align: middle; flex-shrink: 0; }

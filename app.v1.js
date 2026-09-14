@@ -20,6 +20,7 @@
 
   const SAVE_KEY = "ccf-statusbar-maker.state";
   const TAB_KEY = "ccf-statusbar-maker.tab";
+  const PROBE_NAME = "探索者の名前を十文字";
 
   let state = M.defaultState();
   let previewAvatar = null;
@@ -196,13 +197,15 @@
     syncControls();
   }
 
+  // spec: [prop, label, type, min | options, max, step, fmt, showCondition]
   function decoControl(key, spec) {
-    const [prop, label, type, min, max, step, fmt] = spec;
+    const [prop, label, type, min, max, step, fmt, show] = spec;
     const path = `decos.${key}.${prop}`;
-    if (type === "check") return `<div class="row"><label></label><label class="check"><input type="checkbox" data-bind="${path}"> ${esc(label)}</label></div>`;
-    if (type === "color") return `<div class="row"><label>${esc(label)}</label><input type="color" data-bind="${path}"></div>`;
-    if (type === "select") return `<div class="row"><label>${esc(label)}</label><select data-bind="${path}">${optionsHtml(min)}</select></div>`;
-    return `<div class="row"><label>${esc(label)}</label><span class="with-value"><input type="range" data-bind="${path}" min="${min}" max="${max}" step="${step}">`
+    const row = `<div class="row"${show ? ` data-show="${esc(show)}"` : ""}>`;
+    if (type === "check") return `${row}<label></label><label class="check"><input type="checkbox" data-bind="${path}"> ${esc(label)}</label></div>`;
+    if (type === "color") return `${row}<label>${esc(label)}</label><input type="color" data-bind="${path}"></div>`;
+    if (type === "select") return `${row}<label>${esc(label)}</label><select data-bind="${path}">${optionsHtml(min)}</select></div>`;
+    return `${row}<label>${esc(label)}</label><span class="with-value"><input type="range" data-bind="${path}" min="${min}" max="${max}" step="${step}">`
       + `<output data-out="${path}"${fmt ? ` data-fmt="${fmt}"` : ""}></output></span></div>`;
   }
 
@@ -310,20 +313,39 @@
   }
 
   function cssFor(c, size) {
-    return C.build(state, { name: c ? c.name : null, color: c ? c.color : null, url: charUrl(c), size });
+    const sizeNote = size && !c ? `名前が${PROBE_NAME.length}文字までなら収まる大きさ` : "";
+    return C.build(state, { name: c ? c.name : null, color: c ? c.color : null, url: charUrl(c), size, sizeNote });
+  }
+
+  function previewData(css) {
+    return {
+      css,
+      statuses: state.preview.statuses.slice(0, state.layout.count),
+      initiative: state.preview.initiative,
+      avatar: previewAvatar,
+    };
   }
 
   function renderNow() {
     if (!frameDoc) return;
-    K.update(frameDoc, {
-      css: cssFor(currentChar(), null),
-      statuses: state.preview.statuses.slice(0, state.layout.count),
-      initiative: state.preview.initiative,
-      avatar: previewAvatar,
-    });
-    applySize(K.measure(frameDoc));
+    K.update(frameDoc, previewData(cssFor(currentChar(), null)));
+    measureAndApply();
     // Web fonts change the size once they arrive.
-    frameDoc.fonts.ready.then(() => applySize(K.measure(frameDoc)));
+    frameDoc.fonts.ready.then(measureAndApply);
+  }
+
+  // A registered character is sized for its own name. The sample is sized for a name of up to
+  // PROBE_NAME's length, since people paste the sample CSS and write their own name into it.
+  function measureAndApply() {
+    let size = K.measure(frameDoc);
+    if (!currentChar()) {
+      const real = frameDoc.getElementById("obs-custom").textContent;
+      K.update(frameDoc, previewData(C.build(state, { name: PROBE_NAME })));
+      const probe = K.measure(frameDoc);
+      K.update(frameDoc, previewData(real));
+      size = { w: Math.max(size.w, probe.w), h: Math.max(size.h, probe.h) };
+    }
+    applySize(size);
   }
 
   function applySize(size, force) {
@@ -341,7 +363,8 @@
     $("#frameBox").style.height = Math.round(size.h * k) + "px";
     $("#preview").style.transform = `scale(${k})`;
     $("#stageInfo").textContent = `表示 ${Math.round(k * 100)}%　ピンクの点線 = ブラウザソースの範囲`;
-    $("#sizeNote").innerHTML = `ブラウザソースの大きさ　幅 <b>${size.w}</b> × 高さ <b>${size.h}</b>`;
+    const hint = currentChar() ? "" : `<small style="color: var(--muted)">（名前${PROBE_NAME.length}文字まで）</small>`;
+    $("#sizeNote").innerHTML = `ブラウザソースの大きさ　幅 <b>${size.w}</b> × 高さ <b>${size.h}</b>${hint}`;
     $("#cssOut").value = cssFor(currentChar(), size);
   }
 

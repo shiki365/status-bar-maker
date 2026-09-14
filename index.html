@@ -377,6 +377,7 @@
           <div class="row" data-show="name.pos!=left"><label>長い名前</label>
             <select data-bind="name.overflow"><option value="ellipsis">「…」で省略する</option><option value="wrap">折り返す</option><option value="grow">そのぶん広げる</option></select></div>
           <div class="row" data-show="name.pos=left"><label></label><label class="check"><input type="checkbox" data-bind="name.vertical"> 縦書きにする</label></div>
+          <div class="row" data-show="name.pos=left&name.vertical=true"><label></label><label class="check"><input type="checkbox" data-bind="name.fitHeight"> 長い名前はバーの高さで折り返す</label></div>
           <div class="row" data-show="name.pos!=avatar"><label>バーとの間</label>
             <span class="with-value"><input type="range" data-bind="name.gap" min="0" max="40" step="1"><output data-out="name.gap" data-fmt="px"></output></span></div>
         </div>
@@ -534,15 +535,16 @@
 <footer>
   ブラウザだけで動く無料ツールです。作った CSS は自由に使えます。<br>
   ココフォリアの画面の作りが変わると、表示が崩れることがあります。いずれのサービスとも関係のない<strong>非公式</strong>のツールです。<br>
-  v1 ・ 最終更新 2026-09-14
+  v1.1 ・ 最終更新 2026-09-14
 </footer>
 
-<script src="presets.v1.js"></script>
-<script src="shapes.v1.js"></script>
-<script src="model.v1.js"></script>
-<script src="deco.v1.js"></script>
-<script src="css.v1.js"></script>
-<script src="mock.v1.js"></script>
-<script src="app.v1.js"></script>
+<!-- ?v= keeps GitHub Pages' cache from mixing old and new files after an update -->
+<script src="presets.v1.js?v=2"></script>
+<script src="shapes.v1.js?v=2"></script>
+<script src="model.v1.js?v=2"></script>
+<script src="deco.v1.js?v=2"></script>
+<script src="css.v1.js?v=2"></script>
+<script src="mock.v1.js?v=2"></script>
+<script src="app.v1.js?v=2"></script>
 </body>
 </html>
