@@ -1,0 +1,548 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ステータスバーメーカー | ココフォリア × OBS</title>
+<meta name="description" content="ココフォリアのキャラのHP・MP・SANなどを、OBSに好きなデザインで映すためのカスタムCSSを作るツールです。形・色・文字・名前・ピンチの演出を選んで、CSSをコピーするだけ。">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="ステータスバーメーカー">
+<meta property="og:title" content="ステータスバーメーカー">
+<meta property="og:description" content="ココフォリアのキャラの HP・MP・SAN を、OBS に好きなデザインで映すカスタムCSSを作れます。ひな形9種から、形・色・文字・ピンチの演出を選んでコピーするだけ。無料・登録不要。">
+<meta property="og:url" content="https://shiki365.github.io/status-bar-maker/">
+<meta property="og:image" content="https://shiki365.github.io/status-bar-maker/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="ステータスバーメーカー － ココフォリアのステータスを、OBS に好きなデザインで">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #15161a; --panel: #1e1f26; --line: #303240; --line-soft: #282a36;
+    --fg: #e7e7ea; --muted: #9a9aa5; --accent: #6b70ff;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; background: var(--bg); color: var(--fg);
+         font-family: "Yu Gothic UI", "Meiryo", system-ui, sans-serif; font-size: 13px; }
+  header { padding: 18px 24px 14px; border-bottom: 1px solid var(--line); }
+  h1 { margin: 0 0 4px; font-size: 17px; }
+  header p { margin: 0; color: var(--muted); font-size: 12px; }
+  main { display: grid; gap: 20px; padding: 20px 24px 40px;
+         grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); align-items: start; }
+  @media (max-width: 860px) { main { grid-template-columns: 1fr; } }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0 16px 16px; }
+  .tabbar { display: flex; gap: 2px; margin: 0 -16px; padding: 8px 8px 0; border-bottom: 1px solid var(--line);
+            position: sticky; top: 0; background: var(--panel); z-index: 2; border-radius: 10px 10px 0 0; }
+  .tabbar button { flex: 1; border: 0; border-bottom: 2px solid transparent; border-radius: 0; white-space: nowrap;
+                   background: transparent; color: var(--muted); padding: 8px 2px 9px; }
+  .tabbar button:hover { background: transparent; color: var(--fg); }
+  .tabbar button[aria-selected=true] { color: var(--fg); border-bottom-color: var(--accent); font-weight: 700; }
+
+  fieldset { border: 0; border-top: 1px solid var(--line-soft); margin: 14px 0 0; padding: 12px 0 0; min-width: 0; }
+  section > fieldset:first-child { border-top: 0; }
+  legend { padding: 0; color: var(--muted); font-size: 11px; letter-spacing: .08em; }
+  .row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 10px; }
+  .row > label { color: var(--muted); }
+  .row.wide { grid-template-columns: 1fr; }
+  .with-value { display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 8px; align-items: center; }
+  .with-value output { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
+  .color-alpha { display: grid; grid-template-columns: 60px minmax(0, 1fr) 44px; gap: 8px; align-items: center; }
+  .color-alpha output { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .checks { display: grid; gap: 6px; }
+
+  select, input[type=text], input[type=number], textarea {
+    width: 100%; background: #14151b; color: var(--fg); font: inherit;
+    border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; }
+  textarea { resize: vertical; min-height: 52px; line-height: 1.5; }
+  input[type=color] { width: 100%; height: 30px; padding: 2px; background: #14151b;
+                      border: 1px solid var(--line); border-radius: 6px; }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  input[type=checkbox] { accent-color: var(--accent); width: 15px; height: 15px; vertical-align: -3px; }
+  select:focus-visible, input:focus-visible, textarea:focus-visible, button:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 1px; }
+  .desc { margin: 8px 0 0; color: var(--muted); font-size: 12px; line-height: 1.7; }
+  .desc b { color: var(--fg); }
+  .check { color: var(--fg); cursor: pointer; }
+
+  button { background: #2f3140; color: var(--fg); border: 1px solid #464a5e;
+           border-radius: 6px; padding: 7px 14px; font: inherit; cursor: pointer; }
+  button:hover { background: #3a3d4f; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+  button.primary:hover { background: #575cf5; }
+  button.small { padding: 4px 9px; font-size: 12px; }
+  button.danger:hover { background: #5a2f36; border-color: #8a4a55; }
+  button:disabled { opacity: .45; cursor: default; }
+  .btns { display: flex; flex-wrap: wrap; gap: 6px; }
+
+  .deco { border: 1px solid var(--line-soft); border-radius: 8px; padding: 8px 10px; margin-top: 8px; }
+  .deco:has(> .deco-head input:checked) { border-color: #3c3f6a; background: #212336; }
+  .deco-head { display: flex; gap: 8px; align-items: center; font-weight: 700; cursor: pointer; }
+  .deco-head small { color: var(--muted); font-weight: 400; }
+  .deco .row { grid-template-columns: 84px minmax(0, 1fr); }
+
+  .bar-item { display: grid; grid-template-columns: 22px minmax(0, 1fr) 34px 34px 92px 22px; gap: 6px; align-items: center; margin-top: 6px; }
+  .bar-item .num { color: var(--muted); text-align: center; font-variant-numeric: tabular-nums; }
+  .bar-item input[type=color] { height: 28px; padding: 1px; }
+  .bar-head { color: var(--muted); font-size: 11px; }
+
+  .char { border: 1px solid var(--line-soft); border-radius: 8px; padding: 8px 10px; margin-top: 8px; display: grid; gap: 6px; }
+  .char-top { display: grid; grid-template-columns: minmax(0, 1fr) 40px auto; gap: 6px; align-items: center; }
+  .char-top input[type=color] { height: 30px; }
+  .char .btns button { padding: 4px 9px; font-size: 12px; }
+  .char .warn { color: #ffb86b; font-size: 12px; }
+
+  .stage-wrap { position: sticky; top: 20px; display: grid; gap: 10px; min-width: 0; }
+  .stage { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--line);
+           min-height: 220px; display: grid; place-items: center; padding: 28px 16px; }
+  .stage.bg-checker { background-color: #cfcfd6;
+    background-image: linear-gradient(45deg, #9a9aa5 25%, transparent 25% 75%, #9a9aa5 75%),
+                      linear-gradient(45deg, #9a9aa5 25%, transparent 25% 75%, #9a9aa5 75%);
+    background-size: 24px 24px; background-position: 0 0, 12px 12px; }
+  .stage.bg-dark { background-color: #26272e; }
+  .stage.bg-light { background-color: #f2f2f4; }
+  .stage.bg-scene { background: radial-gradient(ellipse at 30% 20%, #6d7fa8, transparent 60%),
+                    radial-gradient(ellipse at 80% 90%, #a8735a, transparent 55%), #2d3348; }
+  .frame-box { position: relative; outline: 1px dashed rgba(255, 64, 160, .85); outline-offset: 0; }
+  .frame-box iframe { position: absolute; left: 0; top: 0; border: 0; background: transparent; transform-origin: 0 0; pointer-events: none; }
+  .stage-info { position: absolute; left: 10px; bottom: 6px; font-size: 11px; color: #fff; text-shadow: 0 1px 2px #000; }
+
+  .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .bar .spacer { flex: 1; }
+  .bar select { width: auto; }
+  .bar input[type=text] { width: 140px; }
+  .seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 5px 11px; background: transparent; }
+  .seg button[aria-pressed=true] { background: #3a3d4f; font-weight: 700; }
+  .status { color: var(--muted); font-size: 12px; min-height: 1.4em; margin: 0; }
+  .status.error { color: #ff8f8f; }
+  .size-note { color: var(--fg); font-size: 13px; }
+  .size-note b { font-size: 15px; }
+
+  .tester { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; display: grid; gap: 6px; }
+  .tester h2 { margin: 0; font-size: 12px; color: var(--muted); font-weight: 400; }
+  .test-row { display: grid; grid-template-columns: 70px minmax(0, 1fr) 54px 58px; gap: 8px; align-items: center; }
+  .test-row output { text-align: right; font-variant-numeric: tabular-nums; }
+
+  details.css-out summary { cursor: pointer; color: var(--muted); }
+  details.css-out textarea { margin-top: 8px; height: 280px; font-family: Consolas, "BIZ UDGothic", monospace; font-size: 12px; white-space: pre; }
+
+  .note { color: var(--muted); font-size: 12px; line-height: 1.8; margin: 0; }
+  .note code { background: #14151b; border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+  .note h2 { font-size: 13px; color: var(--fg); margin: 18px 0 6px; }
+  .note ol, .note ul { margin: 6px 0; padding-left: 1.4em; }
+  footer { border-top: 1px solid var(--line); padding: 16px 24px 40px; color: var(--muted); font-size: 12px; line-height: 1.9; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>ステータスバーメーカー</h1>
+  <p>ココフォリアのキャラの HP・MP・SAN などを、OBS に好きなデザインで映すための「カスタムCSS」を作ります。数値はココフォリアと連動して動きます。すべてブラウザの中だけで処理され、入力した内容がどこかに送られることはありません。</p>
+</header>
+
+<main>
+  <div class="panel">
+    <nav class="tabbar" role="tablist">
+      <button type="button" role="tab" data-tab="layout" aria-selected="true">並び</button>
+      <button type="button" role="tab" data-tab="bar" aria-selected="false">バー</button>
+      <button type="button" role="tab" data-tab="text" aria-selected="false">文字・名前</button>
+      <button type="button" role="tab" data-tab="effects" aria-selected="false">演出・飾り</button>
+      <button type="button" role="tab" data-tab="chars" aria-selected="false">キャラ・保存</button>
+    </nav>
+
+    <!-- ============================================================ layout -->
+    <section data-tab-panel="layout">
+      <fieldset>
+        <legend>デザインのひな形</legend>
+        <div class="row wide"><span class="pair" style="grid-template-columns: 1fr auto;">
+          <select id="design" aria-label="デザインのひな形"></select>
+          <button type="button" id="applyDesign">適用</button>
+        </span></div>
+        <p class="desc" id="designDesc"></p>
+      </fieldset>
+
+      <fieldset>
+        <legend>ステータスの数</legend>
+        <div class="row"><label>本数</label>
+          <span class="with-value"><input type="range" data-bind="layout.count" min="1" max="8" step="1"><output data-out="layout.count" data-fmt="bars"></output></span></div>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="layout.hideExtra"> それより下のステータスは隠す</label></div>
+        <p class="desc">ココフォリアのキャラの「ステータス」に合わせます。<b>上から1本目・2本目…</b>の順に色が付きます（ココフォリアが表示するのは最大8本です）。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>バーの並べ方</legend>
+        <div class="row"><label>並べ方</label>
+          <select data-bind="layout.direction"><option value="column">縦に積む</option><option value="row">横に並べる</option><option value="grid">何列かに並べる</option></select></div>
+        <div class="row" data-show="layout.direction=grid"><label>列の数</label>
+          <span class="with-value"><input type="range" data-bind="layout.columns" min="2" max="4" step="1"><output data-out="layout.columns"></output></span></div>
+        <div class="row"><label>1本の横幅</label>
+          <span class="with-value"><input type="range" data-bind="layout.width" min="80" max="600" step="2"><output data-out="layout.width" data-fmt="px"></output></span></div>
+        <div class="row"><label>バーの高さ</label>
+          <span class="with-value"><input type="range" data-bind="layout.height" min="3" max="80" step="1"><output data-out="layout.height" data-fmt="px"></output></span></div>
+        <div class="row"><label>すき間</label>
+          <span class="with-value"><input type="range" data-bind="layout.gap" min="0" max="40" step="1"><output data-out="layout.gap" data-fmt="px"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>文字の置き方</legend>
+        <div class="row"><label>置き方</label><select data-bind="layout.textLayout" data-options="TEXT_LAYOUTS"></select></div>
+        <div class="row" data-show="layout.textLayout=overlay"><label>揃え方</label><select data-bind="layout.align" data-options="ALIGNS"></select></div>
+        <div class="row" data-show="layout.textLayout=overlay|labelSide"><label>端からの余白</label>
+          <span class="with-value"><input type="range" data-bind="layout.pad" min="0" max="30" step="1"><output data-out="layout.pad" data-fmt="px"></output></span></div>
+        <div class="row" data-show="layout.textLayout=side|labelSide"><label>ラベルの幅</label>
+          <span class="with-value"><input type="range" data-bind="layout.labelW" min="16" max="160" step="1"><output data-out="layout.labelW" data-fmt="px"></output></span></div>
+        <div class="row" data-show="layout.textLayout=side"><label>数値の幅</label>
+          <span class="with-value"><input type="range" data-bind="layout.valueW" min="24" max="200" step="1"><output data-out="layout.valueW" data-fmt="px"></output></span></div>
+        <div class="row" data-show="layout.textLayout!=overlay"><label>文字との間</label>
+          <span class="with-value"><input type="range" data-bind="layout.textGap" min="0" max="24" step="1"><output data-out="layout.textGap" data-fmt="px"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>キャラのアイコン画像</legend>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="avatar.show"> アイコンを出す</label></div>
+        <div data-show="avatar.show=true">
+          <div class="row"><label>位置</label>
+            <select data-bind="avatar.pos"><option value="left">バーの左</option><option value="right">バーの右</option><option value="top">バーの上</option></select></div>
+          <div class="row"><label>幅</label>
+            <span class="with-value"><input type="range" data-bind="avatar.w" min="24" max="320" step="2"><output data-out="avatar.w" data-fmt="px"></output></span></div>
+          <div class="row"><label>高さ</label>
+            <span class="with-value"><input type="range" data-bind="avatar.h" min="24" max="480" step="2"><output data-out="avatar.h" data-fmt="px"></output></span></div>
+          <div class="row"><label>合わせ方</label>
+            <select data-bind="avatar.fit"><option value="top">上に合わせて切り抜く</option><option value="center">中央で切り抜く</option><option value="contain">全体を収める</option></select></div>
+          <div class="row"><label>角丸</label>
+            <span class="with-value"><input type="range" data-bind="avatar.radius" min="0" max="160" step="1"><output data-out="avatar.radius" data-fmt="px"></output></span></div>
+          <div class="row"><label>枠線</label>
+            <span class="with-value"><input type="range" data-bind="avatar.borderW" min="0" max="8" step="1"><output data-out="avatar.borderW" data-fmt="px"></output></span></div>
+          <div class="row" data-show="avatar.useCharColor=false"><label>枠線の色</label>
+            <span class="color-alpha"><input type="color" data-bind="avatar.borderColor"><input type="range" data-bind="avatar.borderAlpha" min="0" max="1" step="0.01"><output data-out="avatar.borderAlpha" data-fmt="pct"></output></span></div>
+          <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="avatar.useCharColor"> 枠線をキャラの色にする</label></div>
+          <div class="row"><label>背景</label>
+            <span class="color-alpha"><input type="color" data-bind="avatar.bg"><input type="range" data-bind="avatar.bgAlpha" min="0" max="1" step="0.01"><output data-out="avatar.bgAlpha" data-fmt="pct"></output></span></div>
+          <div class="row"><label>バーとの間</label>
+            <span class="with-value"><input type="range" data-bind="avatar.gap" min="0" max="40" step="1"><output data-out="avatar.gap" data-fmt="px"></output></span></div>
+
+          <div class="row"><label>イニシアチブ</label><label class="check"><input type="checkbox" data-bind="initiative.show"> アイコンの角に出す</label></div>
+          <div data-show="initiative.show=true">
+            <div class="row"><label>角</label>
+              <select data-bind="initiative.corner"><option value="tl">左上</option><option value="tr">右上</option><option value="bl">左下</option><option value="br">右下</option></select></div>
+            <div class="row"><label>大きさ</label>
+              <span class="with-value"><input type="range" data-bind="initiative.size" min="14" max="48" step="1"><output data-out="initiative.size" data-fmt="px"></output></span></div>
+            <div class="row"><label>文字 / 背景</label><span class="pair"><input type="color" data-bind="initiative.color" aria-label="イニシアチブの文字色"><input type="color" data-bind="initiative.bg" aria-label="イニシアチブの背景色"></span></div>
+          </div>
+        </div>
+        <p class="desc">ココフォリアのコマの画像です。イニシアチブが 0 のときは数字が出ません。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>外側の余白</legend>
+        <div class="row"><label>余白</label>
+          <span class="with-value"><input type="range" data-bind="layout.outer" min="0" max="40" step="1"><output data-out="layout.outer" data-fmt="px"></output></span></div>
+        <p class="desc">光や影が切れないように、まわりに空けておく幅です。</p>
+      </fieldset>
+    </section>
+
+    <!-- ============================================================ bar -->
+    <section data-tab-panel="bar" hidden>
+      <fieldset>
+        <legend>形</legend>
+        <div class="row"><label>形</label><select data-bind="bar.shape" data-options="SHAPES"></select></div>
+        <div class="row" data-show="bar.shape=rect"><label>角丸</label>
+          <span class="with-value"><input type="range" data-bind="bar.radius" min="0" max="40" step="1"><output data-out="bar.radius" data-fmt="px"></output></span></div>
+        <div class="row" data-show="bar.shape=chamfer|arrow|tag"><label>切り込み</label>
+          <span class="with-value"><input type="range" data-bind="bar.cut" min="0" max="40" step="1"><output data-out="bar.cut" data-fmt="px"></output></span></div>
+        <div class="row" data-show="bar.shape=slant"><label>傾き</label>
+          <span class="with-value"><input type="range" data-bind="bar.slant" min="0" max="40" step="1"><output data-out="bar.slant" data-fmt="px"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>枠線</legend>
+        <div class="row"><label>太さ</label>
+          <span class="with-value"><input type="range" data-bind="bar.borderW" min="0" max="6" step="1"><output data-out="bar.borderW" data-fmt="px"></output></span></div>
+        <div data-show="bar.borderW!=0">
+          <div class="row"><label>色</label>
+            <span class="color-alpha"><input type="color" data-bind="bar.borderColor"><input type="range" data-bind="bar.borderAlpha" min="0" max="1" step="0.01"><output data-out="bar.borderAlpha" data-fmt="pct"></output></span></div>
+          <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="bar.double"> 二重線にする</label></div>
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>減った部分（下地）</legend>
+        <div class="row"><label>見え方</label><select data-bind="bar.track" data-options="TRACKS"></select></div>
+        <div class="row" data-show="bar.track!=none"><label>色</label>
+          <span class="color-alpha"><input type="color" data-bind="bar.trackColor"><input type="range" data-bind="bar.trackAlpha" min="0" max="1" step="0.01"><output data-out="bar.trackAlpha" data-fmt="pct"></output></span></div>
+        <div class="row" data-show="bar.track=tint"><label>混ぜる量</label>
+          <span class="with-value"><input type="range" data-bind="bar.tint" min="0" max="1" step="0.01"><output data-out="bar.tint" data-fmt="pct"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>塗り</legend>
+        <div class="row"><label>塗り方</label><select data-bind="bar.fill" data-options="FILLS"></select></div>
+        <div class="row" data-show="bar.fill=stripes"><label></label><label class="check"><input type="checkbox" data-bind="bar.flow"> 斜線を流す</label></div>
+        <div class="row"><label>区切り</label>
+          <span class="with-value"><input type="range" data-bind="bar.segments" min="0" max="40" step="1"><output data-out="bar.segments" data-fmt="seg"></output></span></div>
+        <div class="row" data-show="bar.segments!=0|1"><label>区切りの幅</label>
+          <span class="with-value"><input type="range" data-bind="bar.segGap" min="1" max="8" step="1"><output data-out="bar.segGap" data-fmt="px"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>動きと影</legend>
+        <div class="row"><label>増減の速さ</label>
+          <span class="with-value"><input type="range" data-bind="bar.speed" min="0" max="2" step="0.05"><output data-out="bar.speed" data-fmt="sec"></output></span></div>
+        <div class="row"><label>影</label>
+          <span class="with-value"><input type="range" data-bind="bar.shadow" min="0" max="1" step="0.05"><output data-out="bar.shadow" data-fmt="pct"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>1本ずつの設定</legend>
+        <div class="bar-item bar-head"><span>#</span><span>表示名（空ならそのまま）</span><span>色1</span><span>色2</span><span>記号</span><span title="ピンチの演出">⚠</span></div>
+        <div id="barList"></div>
+        <p class="desc">色2はグラデーションや斜線で使います。⚠ は「演出・飾り」タブのピンチ演出を、そのバーで使うかどうかです。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>記号</legend>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="icons.show"> バーの左に記号を出す</label></div>
+        <div data-show="icons.show=true">
+          <div class="row"><label>大きさ</label>
+            <span class="with-value"><input type="range" data-bind="icons.size" min="10" max="48" step="1"><output data-out="icons.size" data-fmt="px"></output></span></div>
+          <div class="row"><label>バーとの間</label>
+            <span class="with-value"><input type="range" data-bind="icons.gap" min="0" max="20" step="1"><output data-out="icons.gap" data-fmt="px"></output></span></div>
+        </div>
+      </fieldset>
+    </section>
+
+    <!-- ============================================================ text -->
+    <section data-tab-panel="text" hidden>
+      <fieldset>
+        <legend>フォント</legend>
+        <div class="row"><label>ラベル</label><select data-bind="text.labelFont" data-options="FONTS"></select></div>
+        <div class="row"><label>数値</label><select data-bind="text.valueFont" data-options="FONTS"></select></div>
+        <div class="row"><label>太さ</label><select data-bind="text.weight" data-options="WEIGHTS" data-number></select></div>
+        <p class="desc">「英数」のフォントは、日本語の部分だけ PC のゴシック体になります。そのフォントに無い太さは、いちばん近い太さになります。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>大きさ</legend>
+        <div class="row"><label>ラベル</label>
+          <span class="with-value"><input type="range" data-bind="text.labelSize" min="8" max="48" step="1"><output data-out="text.labelSize" data-fmt="px"></output></span></div>
+        <div class="row"><label>現在値</label>
+          <span class="with-value"><input type="range" data-bind="text.valueSize" min="8" max="64" step="1"><output data-out="text.valueSize" data-fmt="px"></output></span></div>
+        <div class="row" data-show="text.valueMode=both"><label>最大値</label>
+          <span class="with-value"><input type="range" data-bind="text.maxSize" min="6" max="48" step="1"><output data-out="text.maxSize" data-fmt="px"></output></span></div>
+        <div class="row"><label>字間</label>
+          <span class="with-value"><input type="range" data-bind="text.spacing" min="0" max="0.3" step="0.01"><output data-out="text.spacing" data-fmt="em"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>表示と色</legend>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="text.showLabel"> ラベル（HP など）を出す</label></div>
+        <div class="row"><label>数値</label><select data-bind="text.valueMode" data-options="VALUE_MODES"></select></div>
+        <div class="row"><label>文字</label><input type="color" data-bind="text.color"></div>
+        <div class="row" data-show="text.valueMode=both"><label>最大値の色</label>
+          <span class="color-alpha"><input type="color" data-bind="text.subColor"><input type="range" data-bind="text.subAlpha" min="0" max="1" step="0.01"><output data-out="text.subAlpha" data-fmt="pct"></output></span></div>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="text.labelByBar"> ラベルをバーの色にする</label></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>ふちどり</legend>
+        <div class="row"><label>種類</label><select data-bind="text.outline" data-options="OUTLINES"></select></div>
+        <div class="row" data-show="text.outline!=none"><label>色</label>
+          <span class="color-alpha"><input type="color" data-bind="text.outlineColor"><input type="range" data-bind="text.outlineAlpha" min="0" max="1" step="0.01"><output data-out="text.outlineAlpha" data-fmt="pct"></output></span></div>
+        <div class="row" data-show="text.outline=stroke"><label>太さ</label>
+          <span class="with-value"><input type="range" data-bind="text.outlineW" min="1" max="5" step="0.5"><output data-out="text.outlineW" data-fmt="px"></output></span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>名前</legend>
+        <div class="row"><label>位置</label><select data-bind="name.pos" data-options="NAME_POS"></select></div>
+        <div data-show="name.pos!=none">
+          <div class="row"><label>見た目</label><select data-bind="name.style" data-options="NAME_STYLES"></select></div>
+          <div class="row"><label>フォント</label><select data-bind="name.font" data-options="FONTS"></select></div>
+          <div class="row"><label>太さ</label><select data-bind="name.weight" data-options="WEIGHTS" data-number></select></div>
+          <div class="row"><label>大きさ</label>
+            <span class="with-value"><input type="range" data-bind="name.size" min="10" max="64" step="1"><output data-out="name.size" data-fmt="px"></output></span></div>
+          <div class="row"><label>文字の色</label><input type="color" data-bind="name.color"></div>
+          <div class="row" data-show="name.style=plate|sidebar|name.pos=avatar"><label>背景</label>
+            <span class="color-alpha"><input type="color" data-bind="name.bg"><input type="range" data-bind="name.bgAlpha" min="0" max="1" step="0.01"><output data-out="name.bgAlpha" data-fmt="pct"></output></span></div>
+          <div data-show="name.style=underline|sidebar|tab|badge">
+            <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="name.useCharColor"> 線や背景をキャラの色にする</label></div>
+            <div class="row" data-show="name.useCharColor=false"><label>線・背景の色</label><input type="color" data-bind="name.accent"></div>
+          </div>
+          <div class="row" data-show="name.pos!=avatar"><label>揃え</label>
+            <select data-bind="name.align"><option value="left">左</option><option value="center">中央</option><option value="right">右</option></select></div>
+          <div class="row" data-show="name.pos!=left"><label>長い名前</label>
+            <select data-bind="name.overflow"><option value="ellipsis">「…」で省略する</option><option value="wrap">折り返す</option><option value="grow">そのぶん広げる</option></select></div>
+          <div class="row" data-show="name.pos=left"><label></label><label class="check"><input type="checkbox" data-bind="name.vertical"> 縦書きにする</label></div>
+          <div class="row" data-show="name.pos!=avatar"><label>バーとの間</label>
+            <span class="with-value"><input type="range" data-bind="name.gap" min="0" max="40" step="1"><output data-out="name.gap" data-fmt="px"></output></span></div>
+        </div>
+        <p class="desc">ココフォリアのこの画面には名前が出ないため、CSS の中に書き込みます。キャラごとの名前は「キャラ・保存」タブで入れられます。</p>
+      </fieldset>
+    </section>
+
+    <!-- ============================================================ effects -->
+    <section data-tab-panel="effects" hidden>
+      <fieldset>
+        <legend>ピンチの演出</legend>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="alert.lowOn"> 残りが少なくなったら知らせる</label></div>
+        <div data-show="alert.lowOn=true">
+          <div class="row"><label>残りが</label>
+            <span class="with-value"><input type="range" data-bind="alert.lowAt" min="5" max="95" step="5"><output data-out="alert.lowAt" data-fmt="under"></output></span></div>
+          <div class="row"><label>色</label><input type="color" data-bind="alert.lowColor"></div>
+          <div class="row"><label>演出</label><span class="checks">
+            <label class="check"><input type="checkbox" data-bind="alert.lowPulse"> 脈打つように光る</label>
+            <label class="check"><input type="checkbox" data-bind="alert.lowBlink"> バーが点滅する</label>
+            <label class="check"><input type="checkbox" data-bind="alert.lowShake"> 震える</label>
+            <label class="check"><input type="checkbox" data-bind="alert.lowFill"> バーをこの色に変える</label>
+            <label class="check"><input type="checkbox" data-bind="alert.lowText"> 数値をこの色に変える</label>
+          </span></div>
+        </div>
+        <p class="desc">どのバーで使うかは「バー」タブの ⚠ で選べます。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>0 になったとき</legend>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="alert.zeroOn"> 0 になったバーを変える</label></div>
+        <div class="row" data-show="alert.zeroOn=true"><label>演出</label><span class="checks">
+          <label class="check"><input type="checkbox" data-bind="alert.zeroGray"> 灰色にする</label>
+          <label class="check"><input type="checkbox" data-bind="alert.zeroBlink"> 文字を点滅させる</label>
+        </span></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>ココフォリアの赤い数字</legend>
+        <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="alert.red80"> 赤い数字を使う</label></div>
+        <div data-show="alert.red80=true">
+          <div class="row"><label>色</label><input type="color" data-bind="alert.redColor"></div>
+          <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="alert.redBlink"> 点滅させる</label></div>
+        </div>
+        <p class="desc">ココフォリアは、現在値が<b>最大値の 80% 以下</b>になると数字を赤くします（ピンチの判定とは別です）。使わないときは、減っても普段の文字色のままです。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>飾り</legend>
+        <div id="decoList"></div>
+      </fieldset>
+      <p class="desc">ピンチと 0 の演出は OBS 30 以降で動きます（それより古い OBS では演出だけが出ません）。</p>
+    </section>
+
+    <!-- ============================================================ chars -->
+    <section data-tab-panel="chars" hidden>
+      <fieldset>
+        <legend>ルーム</legend>
+        <div class="row wide"><input type="text" data-bind="characters.room" placeholder="https://ccfolia.com/rooms/…" aria-label="ルームのURL"></div>
+        <p class="desc">ココフォリアでルームを開いたときの URL を貼ります。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>キャラ</legend>
+        <div id="charList"></div>
+        <div class="row wide"><span class="btns"><button type="button" id="addChar">キャラを追加</button></span></div>
+        <p class="desc">キャラクター ID は、盤面のコマを右クリック →「Copy Id (for dev)」でコピーできます。コマの URL をそのまま貼っても構いません。<br>「CSS をコピー」を押すと、そのキャラの名前と色を書き込んだ CSS がコピーされます。</p>
+      </fieldset>
+
+      <fieldset>
+        <legend>プロジェクト</legend>
+        <div class="row wide"><span class="btns">
+          <button type="button" id="saveProject">プロジェクトを保存</button>
+          <button type="button" id="openProject">開く</button>
+          <button type="button" class="danger" id="resetAll">最初からやり直す</button>
+        </span></div>
+        <p class="desc">作業内容はこのブラウザに自動で保存されます。別の PC へ持っていくときやバックアップには「プロジェクトを保存」を使ってください。</p>
+      </fieldset>
+    </section>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="bar">
+      <label for="previewChar" style="color: var(--muted)">プレビュー</label>
+      <select id="previewChar"></select>
+      <span class="spacer"></span>
+      <button type="button" class="small" id="undo" title="元に戻す (Ctrl+Z)">↶ 戻す</button>
+      <button type="button" class="small" id="redo" title="やり直す (Ctrl+Y)">↷ 進む</button>
+    </div>
+    <div class="stage bg-checker" id="stage">
+      <div class="frame-box" id="frameBox"><iframe id="preview" title="プレビュー" tabindex="-1"></iframe></div>
+      <span class="stage-info" id="stageInfo"></span>
+    </div>
+    <div class="bar">
+      <span class="seg" id="bgSeg" aria-label="プレビューの背景">
+        <button type="button" data-bg="checker">市松</button>
+        <button type="button" data-bg="dark">暗い</button>
+        <button type="button" data-bg="light">明るい</button>
+        <button type="button" data-bg="scene">色つき</button>
+      </span>
+      <span class="spacer"></span>
+      <span class="size-note" id="sizeNote"></span>
+    </div>
+
+    <div class="tester" id="tester">
+      <h2>数値を動かして確かめる（プレビューだけ。書き出す CSS には影響しません）</h2>
+      <div id="testRows"></div>
+      <div class="bar">
+        <button type="button" class="small" data-test="-3">−3</button>
+        <button type="button" class="small" data-test="+3">＋3</button>
+        <button type="button" class="small" data-test="half">半分に</button>
+        <button type="button" class="small" data-test="low">ピンチに</button>
+        <button type="button" class="small" data-test="zero">0 に</button>
+        <button type="button" class="small" data-test="full">全回復</button>
+        <span class="spacer"></span>
+        <label style="color: var(--muted)">イニシアチブ <input type="number" id="testInit" min="0" max="99" style="width: 64px"></label>
+        <button type="button" class="small" id="pickAvatar">アイコン画像を選ぶ</button>
+      </div>
+    </div>
+
+    <div class="bar">
+      <input type="text" data-bind="fileBase" aria-label="ファイル名" placeholder="ファイル名">
+      <span class="spacer"></span>
+      <button type="button" id="downloadCss">CSS を保存</button>
+      <button type="button" class="primary" id="copyCss">CSS をコピー</button>
+    </div>
+    <p class="status" id="status">読み込み中...</p>
+
+    <details class="css-out">
+      <summary>書き出す CSS を見る</summary>
+      <textarea id="cssOut" readonly spellcheck="false" aria-label="書き出す CSS"></textarea>
+    </details>
+
+    <div class="note">
+      <h2>OBS での設定</h2>
+      <ol>
+        <li>ソースを追加 →「ブラウザ」。URL にキャラの URL を入れます：<br><code>https://ccfolia.com/rooms/{ルームID}/characters/{キャラクターID}</code></li>
+        <li>幅と高さに、上に出ている <b>ブラウザソースの大きさ</b> を入れます。</li>
+        <li>「カスタム CSS」の中身を全部消して、コピーした CSS を貼り付けます。</li>
+        <li>真っ白のままなら、ソースを右クリック →「対話」でココフォリアにログインしてルームに入ります（1 回やれば覚えています）。</li>
+        <li>2 人目からは、ソースを右クリック →「コピー」→「<b>複製を貼り付け</b>」で増やし、URL と CSS をそのキャラのものに替えます。「参照を貼り付け」だと全員が同じキャラになります。</li>
+      </ol>
+      <h2>ココフォリアでの設定</h2>
+      <ul>
+        <li>キャラの「ステータス」の<b>並び順</b>が、1本目・2本目…の色になります（例: HP → MP → SAN）。</li>
+        <li>チャットで <code>:HP-3</code> <code>:SAN=45</code> のように打つと、OBS 側もすぐに変わります。</li>
+        <li>「ステータスを隠す」にしたキャラは、持ち主以外にはバーが表示されません。</li>
+      </ul>
+    </div>
+  </div>
+</main>
+
+<input type="file" id="projectFile" accept=".json,application/json" hidden>
+<input type="file" id="avatarFile" accept="image/*" hidden>
+
+<footer>
+  ブラウザだけで動く無料ツールです。作った CSS は自由に使えます。<br>
+  ココフォリアの画面の作りが変わると、表示が崩れることがあります。いずれのサービスとも関係のない<strong>非公式</strong>のツールです。<br>
+  v1 ・ 最終更新 2026-09-14
+</footer>
+
+<script src="presets.v1.js"></script>
+<script src="shapes.v1.js"></script>
+<script src="model.v1.js"></script>
+<script src="deco.v1.js"></script>
+<script src="css.v1.js"></script>
+<script src="mock.v1.js"></script>
+<script src="app.v1.js"></script>
+</body>
+</html>
