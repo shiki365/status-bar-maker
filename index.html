@@ -107,7 +107,8 @@
   .stage.bg-scene { background: radial-gradient(ellipse at 30% 20%, #6d7fa8, transparent 60%),
                     radial-gradient(ellipse at 80% 90%, #a8735a, transparent 55%), #2d3348; }
   .frame-box { position: relative; outline: 1px dashed rgba(255, 64, 160, .85); outline-offset: 0; }
-  .frame-box iframe { position: absolute; left: 0; top: 0; border: 0; background: transparent; transform-origin: 0 0; pointer-events: none; }
+  /* color-scheme must match the page inside, or Chromium paints the iframe opaque white (this page is dark). */
+  .frame-box iframe { position: absolute; left: 0; top: 0; border: 0; background: transparent; transform-origin: 0 0; pointer-events: none; color-scheme: normal; }
   .stage-info { position: absolute; left: 10px; bottom: 6px; font-size: 11px; color: #fff; text-shadow: 0 1px 2px #000; }
 
   .bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
