@@ -47,6 +47,7 @@
   .row { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 10px; align-items: center; margin-top: 10px; }
   .row > label { color: var(--muted); }
   .row.wide { grid-template-columns: 1fr; }
+  .row.sub > label { padding-left: 12px; }
   .with-value { display: grid; grid-template-columns: minmax(0, 1fr) 52px; gap: 8px; align-items: center; }
   .with-value output { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
   .pair { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; align-items: center; }
@@ -326,9 +327,14 @@
       <fieldset>
         <legend>フォント</legend>
         <div class="row"><label>ラベル</label><select data-bind="text.labelFont" data-options="FONTS"></select></div>
+        <div class="row sub" data-show="text.labelFont=pc"><label>フォント名</label><span class="pc-font">
+          <input type="text" data-bind="text.labelFontName" placeholder="例）BIZ UDPGothic" aria-label="ラベルのフォント名" autocomplete="off" spellcheck="false"><button type="button" class="small" data-pc-fonts>一覧から選ぶ</button></span></div>
         <div class="row"><label>数値</label><select data-bind="text.valueFont" data-options="FONTS"></select></div>
+        <div class="row sub" data-show="text.valueFont=pc"><label>フォント名</label><span class="pc-font">
+          <input type="text" data-bind="text.valueFontName" placeholder="例）BIZ UDPGothic" aria-label="数値のフォント名" autocomplete="off" spellcheck="false"><button type="button" class="small" data-pc-fonts>一覧から選ぶ</button></span></div>
         <div class="row"><label>太さ</label><select data-bind="text.weight" data-options="WEIGHTS" data-number></select></div>
         <p class="desc">「英数」のフォントは、日本語の部分だけ PC のゴシック体になります。そのフォントに無い太さは、いちばん近い太さになります。</p>
+        <p class="desc" data-show="text.labelFont=pc|text.valueFont=pc">「名前で指定」では、この PC に入れたフォントが使えます。<b>OBS を動かす PC にも同じフォントが入っている必要があります。</b></p>
       </fieldset>
 
       <fieldset>
@@ -368,6 +374,8 @@
         <div data-show="name.pos!=none">
           <div class="row"><label>見た目</label><select data-bind="name.style" data-options="NAME_STYLES"></select></div>
           <div class="row"><label>フォント</label><select data-bind="name.font" data-options="FONTS"></select></div>
+          <div class="row sub" data-show="name.font=pc"><label>フォント名</label><span class="pc-font">
+            <input type="text" data-bind="name.fontName" placeholder="例）BIZ UDPGothic" aria-label="名前のフォント名" autocomplete="off" spellcheck="false"><button type="button" class="small" data-pc-fonts>一覧から選ぶ</button></span></div>
           <div class="row"><label>太さ</label><select data-bind="name.weight" data-options="WEIGHTS" data-number></select></div>
           <div class="row"><label>大きさ</label>
             <span class="with-value"><input type="range" data-bind="name.size" min="10" max="64" step="1"><output data-out="name.size" data-fmt="px"></output></span></div>
@@ -531,6 +539,12 @@
         <li>チャットで <code>:HP-3</code> <code>:SAN=45</code> のように打つと、OBS 側もすぐに変わります。</li>
         <li>「ステータスを隠す」にしたキャラは、持ち主以外にはバーが表示されません。</li>
       </ul>
+      <h2>PC に入れたフォントを使うとき</h2>
+      <ul>
+        <li>フォント欄で「名前で指定（PCのフォント）」を選び、フォント名を入れます。Chrome / Edge では「一覧から選ぶ」で、PC に入っているフォントを見た目で選べます（初回はフォントの使用の許可を聞かれます）。</li>
+        <li>OBS は自分の PC のフォントで表示するので、<b>OBS を動かす PC にも同じフォントを入れてください</b>。入っていないと、ふつうのゴシック体になります。</li>
+        <li>漢字が入っていないフォントでは、漢字の部分だけふつうのゴシック体になります（一覧の見本の「永」で確かめられます）。</li>
+      </ul>
     </div>
   </div>
 </main>
@@ -542,16 +556,17 @@
   ブラウザだけで動く無料ツールです。作った CSS は自由に使えます。<br>
   ココフォリアの画面の作りが変わると、表示が崩れることがあります。いずれのサービスとも関係のない<strong>非公式</strong>のツールです。<br>
   <a href="https://shiki365.github.io/">ほかのツールも見る（shiki365 のツール置き場）</a> ・ <a href="https://shiki365.github.io/#contact">不具合の報告・感想</a><br>
-  v1.1 ・ 最終更新 2026-09-14
+  v1.2 ・ 最終更新 2026-09-17
 </footer>
 
 <!-- ?v= keeps GitHub Pages' cache from mixing old and new files after an update -->
-<script src="presets.v1.js?v=2"></script>
+<script src="presets.v1.js?v=3"></script>
 <script src="shapes.v1.js?v=2"></script>
 <script src="model.v1.js?v=2"></script>
 <script src="deco.v1.js?v=2"></script>
-<script src="css.v1.js?v=2"></script>
+<script src="css.v1.js?v=3"></script>
 <script src="mock.v1.js?v=2"></script>
+<script src="pcfonts.v1.js?v=1"></script>
 <script src="app.v1.js?v=3"></script>
 </body>
 </html>

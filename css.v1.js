@@ -82,7 +82,22 @@
     return list.reduce((best, w) => (Math.abs(w - wanted) < Math.abs(best - wanted) ? w : best), list[0]);
   }
 
-  const family = key => `"${font(key).family}", ${font(key).stack}`;
+  // name: the typed family for the "pc" font (a font installed on the PC; no import).
+  function family(key, name) {
+    const f = font(key);
+    if (key !== "pc") return `"${f.family}", ${f.stack}`;
+    const typed = pcName(name);
+    return typed ? `${cssString(typed)}, ${f.stack}` : f.stack;
+  }
+
+  const pcName = name => String(name || "").replace(/[\r\n]+/g, " ").trim();
+
+  // uses: [key, weight, typedName]. A PC font shows up only if OBS's PC has it too.
+  function pcFontNote(uses) {
+    const names = [...new Set(uses.filter(([key]) => key === "pc").map(([, , name]) => pcName(name)).filter(Boolean))];
+    if (!names.length) return [];
+    return ["   ■ PC のフォント（OBS を動かす PC にも入れてください）", `       ${safeComment(names.join(" / "))}`];
+  }
 
   function fontImports(uses) {
     const map = new Map();
@@ -207,7 +222,7 @@
     const auto = N.style === "tab" || N.style === "badge";
     const decls = {
       content: "var(--name)", display: "block", margin: "0", "box-sizing": "border-box",
-      "font-family": family(N.font), "font-size": px(N.size), "font-weight": weightOf(N.font, N.weight),
+      "font-family": family(N.font, N.fontName), "font-size": px(N.size), "font-weight": weightOf(N.font, N.weight),
       color: N.color, "line-height": "1.3", "letter-spacing": "0.04em", "font-feature-settings": '"palt"', "text-align": N.align,
       "text-shadow": N.style === "text" || N.style === "underline" ? textShadow(T) : T.outline === "none" ? "none" : "0 1px 2px rgba(0, 0, 0, 0.55)",
     };
@@ -282,6 +297,11 @@
       ctx.keyframe("sb-stripes", "to { background-position: 24px 0; }");
     }
 
+    const uses = [];
+    if (T.showLabel) uses.push([T.labelFont, T.weight, T.labelFontName]);
+    if (T.valueMode !== "none" || I.show) uses.push([T.valueFont, T.weight, T.valueFontName]);
+    if (showName) uses.push([N.font, N.weight, N.fontName]);
+
     const w = new Writer();
     const design = P.DESIGNS[st.design];
     w.raw([
@@ -294,13 +314,10 @@
       ...(opts.size ? ["   ■ ブラウザソースの大きさ", `       幅 ${opts.size.w} / 高さ ${opts.size.h}${opts.sizeNote ? `（${safeComment(opts.sizeNote)}）` : ""}`] : []),
       "   ■ ココフォリア側",
       "       キャラの「ステータス」の並び順が、上から1本目・2本目…の色になります。",
+      ...pcFontNote(uses),
       "   ========================================================================== */",
     ].join("\n"));
 
-    const uses = [];
-    if (T.showLabel) uses.push([T.labelFont, T.weight]);
-    if (T.valueMode !== "none" || I.show) uses.push([T.valueFont, T.weight]);
-    if (showName) uses.push([N.font, N.weight]);
     const imports = fontImports(uses);
     if (imports.length) w.raw(imports.join("\n"));
 
@@ -343,7 +360,7 @@
         bl: { bottom: off, left: off, top: "auto", right: "auto" }, br: { bottom: off, right: off, top: "auto", left: "auto" } }[I.corner];
       w.add(SEL.initiative, Object.assign({
         display: "flex", "min-width": px(I.size), height: px(I.size), padding: `0 ${px(I.size * 0.25)}`, "border-radius": px(I.size / 2),
-        "font-family": family(T.valueFont), "font-size": px(I.size * 0.58), "font-weight": weightOf(T.valueFont, T.weight), "line-height": "1",
+        "font-family": family(T.valueFont, T.valueFontName), "font-size": px(I.size * 0.58), "font-weight": weightOf(T.valueFont, T.weight), "line-height": "1",
         color: I.color, background: I.bg, transform: "none", "z-index": "2", "box-shadow": "0 1px 3px rgba(0, 0, 0, 0.5)",
       }, corner));
       w.add(`${SEL.badge} > .MuiBadge-invisible`, { display: "none" });
@@ -392,7 +409,7 @@
       w.add(SEL.row + PART.label, { display: "none" });
     } else {
       w.add(SEL.row + PART.label, Object.assign({
-        "font-family": family(T.labelFont), "font-size": px(T.labelSize), "font-weight": weightOf(T.labelFont, T.weight),
+        "font-family": family(T.labelFont, T.labelFontName), "font-size": px(T.labelSize), "font-weight": weightOf(T.labelFont, T.weight),
         color: T.labelByBar ? "var(--c1)" : T.color,
       }, labelPlace));
       st.bars.slice(0, g.count).forEach((b, i) => {
@@ -412,7 +429,7 @@
       w.add(SEL.row + PART.value, { display: "none" });
     } else {
       w.add(SEL.row + PART.value, Object.assign({
-        "font-family": family(T.valueFont), "font-size": T.valueMode === "both" ? px(T.maxSize) : "0", "font-weight": weightOf(T.valueFont, T.weight),
+        "font-family": family(T.valueFont, T.valueFontName), "font-size": T.valueMode === "both" ? px(T.maxSize) : "0", "font-weight": weightOf(T.valueFont, T.weight),
         color: rgba(T.subColor, T.subAlpha), "font-variant-numeric": "tabular-nums",
       }, valuePlace));
       w.add(SEL.row + PART.current, {
