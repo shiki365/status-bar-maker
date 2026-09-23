@@ -77,6 +77,8 @@
     if (path === "layout.count") {
       renderBarList();
       renderTester();
+    } else if (/^bars.d+.label$/.test(path)) {
+      renderItemList();
     } else if (/^preview\.statuses\.\d+\.2$/.test(path)) {
       const i = Number(path.split(".")[2]);
       const range = $(`[data-bind="preview.statuses.${i}.1"]`);
@@ -117,6 +119,7 @@
       case "em": return r.toFixed(2);
       case "bars": return value + "本";
       case "seg": return value > 1 ? value + "個" : "なし";
+      case "count": return value + "個";
       case "under": return value + "%未満";
       default: return String(r);
     }
@@ -186,6 +189,16 @@
         <select data-bind="bars.${i}.icon" aria-label="${i + 1}本目の記号">${optionsHtml(P.ICONS)}</select>
         <input type="checkbox" data-bind="bars.${i}.low" aria-label="${i + 1}本目でピンチの演出を使う">
       </div>`).join("");
+    bindControls(box);
+    renderItemList();
+  }
+
+  // Which item sits beside each bar (the wearing-away effect).
+  function renderItemList() {
+    const box = $("#itemList");
+    box.innerHTML = state.bars.slice(0, state.layout.count).map((b, i) => `
+      <div class="row"><label>${i + 1}本目（${esc(b.label || state.preview.statuses[i][0])}）</label>
+        <select data-bind="bars.${i}.item">${optionsHtml(P.ITEM_TYPES)}</select></div>`).join("");
     bindControls(box);
     syncControls();
   }
