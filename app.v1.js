@@ -77,7 +77,7 @@
     if (path === "layout.count") {
       renderBarList();
       renderTester();
-    } else if (/^bars.d+.label$/.test(path)) {
+    } else if (/^bars\.\d+\.label$/.test(path)) {
       renderItemList();
     } else if (/^preview\.statuses\.\d+\.2$/.test(path)) {
       const i = Number(path.split(".")[2]);
@@ -590,6 +590,16 @@
 
   function wireEvents() {
     for (const btn of $$("[data-tab]")) btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    // Arrow keys / Home / End move between the tabs, as in the WAI-ARIA tabs pattern.
+    $(".tabbar").addEventListener("keydown", ev => {
+      const tabs = $$("[data-tab]"), i = tabs.indexOf(document.activeElement);
+      const next = i < 0 ? undefined : { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tabs.length - 1 }[ev.key];
+      if (next === undefined) return;
+      ev.preventDefault();
+      const tab = tabs[(next + tabs.length) % tabs.length];
+      tab.focus();
+      switchTab(tab.dataset.tab);
+    });
     $("#design").addEventListener("change", showDesignDesc);
     $("#applyDesign").addEventListener("click", () => {
       const key = $("#design").value;
@@ -601,7 +611,7 @@
     $("#undo").addEventListener("click", undo);
     $("#redo").addEventListener("click", redo);
     document.addEventListener("keydown", ev => {
-      if (!(ev.ctrlKey || ev.metaKey) || ev.target.matches("input[type=text], textarea")) return;
+      if (!(ev.ctrlKey || ev.metaKey) || ev.target.matches("input[type=text], input[type=number], textarea")) return;
       const key = ev.key.toLowerCase();
       if (key === "z" && !ev.shiftKey) { ev.preventDefault(); undo(); }
       else if (key === "y" || (key === "z" && ev.shiftKey)) { ev.preventDefault(); redo(); }
