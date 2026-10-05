@@ -1,7 +1,10 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" data-langs="ja en ko">
 <head>
 <meta charset="utf-8">
+<script src="i18n.v1.js"></script>
+<script src="lang.en.v1.js"></script>
+<script src="lang.ko.v1.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ステータスバーメーカー | ココフォリア × OBS</title>
 <meta name="description" content="ココフォリアのキャラのHP・MP・SANなどを、OBSに好きなデザインで映すためのカスタムCSSを作るツールです。形・色・文字・名前・ピンチや減るほど壊れていく演出を選んで、CSSをコピーするだけ。">
@@ -37,7 +40,9 @@
 
   .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 0 16px 16px; }
   .tabbar { display: flex; gap: 2px; margin: 0 -16px; padding: 8px 8px 0; border-bottom: 1px solid var(--line);
-            position: sticky; top: 0; background: var(--panel); z-index: 2; border-radius: 10px 10px 0 0; }
+            position: sticky; top: 0; background: var(--panel); z-index: 2; border-radius: 10px 10px 0 0;
+            /* Labels too long for a narrow screen (another language) scroll here instead of widening the panel. */
+            overflow-x: auto; scrollbar-width: none; }
   .tabbar button { flex: 1; border: 0; border-bottom: 2px solid transparent; border-radius: 0; white-space: nowrap;
                    background: transparent; color: var(--muted); padding: 8px 2px 9px; }
   .tabbar button:hover { background: transparent; color: var(--fg); }
@@ -140,7 +145,11 @@
   .note ol, .note ul { margin: 6px 0; padding-left: 1.4em; }
   footer { border-top: 1px solid var(--line); padding: 16px 24px 40px; color: var(--muted); font-size: 12px; line-height: 1.9; }
   footer a { color: #a8abff; }
-  .home-link { display: inline-block; margin-bottom: 4px; color: var(--muted); font-size: 12px; text-decoration: none; }
+  .topline { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 16px; margin-bottom: 4px; }
+  .lang-switch { margin: 0; color: var(--muted); font-size: 12px; }
+  .lang-switch a { color: #a8abff; }
+  .lang-switch a[aria-current] { color: var(--fg); font-weight: 700; text-decoration: none; }
+  .home-link { display: inline-block; color: var(--muted); font-size: 12px; text-decoration: none; }
   .home-link:hover { color: var(--fg); text-decoration: underline; }
   .home-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
@@ -148,7 +157,10 @@
 <body>
 
 <header>
-  <a class="home-link" href="https://shiki365.github.io/">‹ shiki365 のツール置き場</a>
+  <div class="topline">
+    <a class="home-link" href="https://shiki365.github.io/">‹ shiki365 のツール置き場</a>
+    <p class="lang-switch" data-lang-switch></p>
+  </div>
   <h1>ステータスバーメーカー</h1>
   <p>ココフォリアのキャラの HP・MP・SAN などを、OBS に好きなデザインで映すための「カスタムCSS」を作ります。数値はココフォリアと連動して動きます。すべてブラウザの中だけで処理され、入力した内容がどこかに送られることはありません。</p>
 </header>
@@ -179,7 +191,7 @@
         <div class="row"><label>本数</label>
           <span class="with-value"><input type="range" data-bind="layout.count" min="1" max="8" step="1"><output data-out="layout.count" data-fmt="bars"></output></span></div>
         <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="layout.hideExtra"> それより下のステータスは隠す</label></div>
-        <p class="desc">ココフォリアのキャラの「ステータス」に合わせます。<b>上から1本目・2本目…</b>の順に色が付きます（ココフォリアが表示するのは最大8本です）。</p>
+        <p class="desc" data-i18n>ココフォリアのキャラの「ステータス」に合わせます。<b>上から1本目・2本目…</b>の順に色が付きます（ココフォリアが表示するのは最大8本です）。</p>
       </fieldset>
 
       <fieldset>
@@ -336,7 +348,7 @@
           <input type="text" data-bind="text.valueFontName" placeholder="例）BIZ UDPGothic" aria-label="数値のフォント名" autocomplete="off" spellcheck="false"><button type="button" class="small" data-pc-fonts>一覧から選ぶ</button></span></div>
         <div class="row"><label>太さ</label><select data-bind="text.weight" data-options="WEIGHTS" data-number></select></div>
         <p class="desc">「英数」のフォントは、日本語の部分だけ PC のゴシック体になります。そのフォントに無い太さは、いちばん近い太さになります。</p>
-        <p class="desc" data-show="text.labelFont=pc|text.valueFont=pc">「名前で指定」では、この PC に入れたフォントが使えます。<b>OBS を動かす PC にも同じフォントが入っている必要があります。</b></p>
+        <p class="desc" data-show="text.labelFont=pc|text.valueFont=pc" data-i18n>「名前で指定」では、この PC に入れたフォントが使えます。<b>OBS を動かす PC にも同じフォントが入っている必要があります。</b></p>
       </fieldset>
 
       <fieldset>
@@ -450,7 +462,7 @@
             <span class="with-value"><input type="range" data-bind="damage.gap" min="0" max="30" step="1"><output data-out="damage.gap" data-fmt="px"></output></span></div>
         </div>
         <div class="row" data-show="damage.cracks=true|damage.items=true"><label></label><label class="check"><input type="checkbox" data-bind="damage.flash"> 壊れた瞬間に光らせる</label></div>
-        <p class="desc">ひびは残りが 75%・50%・25% を切るたびに増え、0 で砕けます。アイテムは右から順に壊れます。<b>並べる数を最大値と同じにすると、1 点減るごとに 1 つ壊れます</b>（HP 12 なら 12 個）。アイテムを置くと、バーの左の「記号」は出ません。</p>
+        <p class="desc" data-i18n>ひびは残りが 75%・50%・25% を切るたびに増え、0 で砕けます。アイテムは右から順に壊れます。<b>並べる数を最大値と同じにすると、1 点減るごとに 1 つ壊れます</b>（HP 12 なら 12 個）。アイテムを置くと、バーの左の「記号」は出ません。</p>
       </fieldset>
 
       <fieldset>
@@ -460,7 +472,7 @@
           <div class="row"><label>色</label><input type="color" data-bind="alert.redColor"></div>
           <div class="row"><label></label><label class="check"><input type="checkbox" data-bind="alert.redBlink"> 点滅させる</label></div>
         </div>
-        <p class="desc">ココフォリアは、現在値が<b>最大値の 80% 以下</b>になると数字を赤くします（ピンチの判定とは別です）。使わないときは、減っても普段の文字色のままです。</p>
+        <p class="desc" data-i18n>ココフォリアは、現在値が<b>最大値の 80% 以下</b>になると数字を赤くします（ピンチの判定とは別です）。使わないときは、減っても普段の文字色のままです。</p>
       </fieldset>
 
       <fieldset>
@@ -482,7 +494,7 @@
         <legend>キャラ</legend>
         <div id="charList"></div>
         <div class="row wide"><span class="btns"><button type="button" id="addChar">キャラを追加</button></span></div>
-        <p class="desc">キャラクター ID は、盤面のコマを右クリック →「Copy Id (for dev)」でコピーできます。コマの URL をそのまま貼っても構いません。<br>「CSS をコピー」を押すと、そのキャラの名前と色を書き込んだ CSS がコピーされます。</p>
+        <p class="desc" data-i18n>キャラクター ID は、盤面のコマを右クリック →「Copy Id (for dev)」でコピーできます。コマの URL をそのまま貼っても構いません。<br>「CSS をコピー」を押すと、そのキャラの名前と色を書き込んだ CSS がコピーされます。</p>
       </fieldset>
 
       <fieldset>
@@ -552,22 +564,22 @@
     <div class="note">
       <h2>OBS での設定</h2>
       <ol>
-        <li>ソースを追加 →「ブラウザ」。URL にキャラの URL を入れます：<br><code>https://ccfolia.com/rooms/{ルームID}/characters/{キャラクターID}</code></li>
-        <li>幅と高さに、上に出ている <b>ブラウザソースの大きさ</b> を入れます。</li>
+        <li data-i18n>ソースを追加 →「ブラウザ」。URL にキャラの URL を入れます：<br><code>https://ccfolia.com/rooms/{ルームID}/characters/{キャラクターID}</code></li>
+        <li data-i18n>幅と高さに、上に出ている <b>ブラウザソースの大きさ</b> を入れます。</li>
         <li>「カスタム CSS」の中身を全部消して、コピーした CSS を貼り付けます。</li>
         <li>真っ白のままなら、ソースを右クリック →「対話」でココフォリアにログインしてルームに入ります（1 回やれば覚えています）。</li>
-        <li>2 人目からは、<b>「ソースを追加」→「ブラウザ」で新しく作り</b>、URL と CSS をそのキャラのものにします。<b>ブラウザソースは OBS の仕様で複製できず</b>（「複製を貼り付け」は灰色のまま）、「参照を貼り付け」で増やすと全員が同じキャラになってしまいます。大きさや位置は、右クリック →「変換をコピー」→「変換を貼り付け」でそろえられます。</li>
+        <li data-i18n>2 人目からは、<b>「ソースを追加」→「ブラウザ」で新しく作り</b>、URL と CSS をそのキャラのものにします。<b>ブラウザソースは OBS の仕様で複製できず</b>（「複製を貼り付け」は灰色のまま）、「参照を貼り付け」で増やすと全員が同じキャラになってしまいます。大きさや位置は、右クリック →「変換をコピー」→「変換を貼り付け」でそろえられます。</li>
       </ol>
       <h2>ココフォリアでの設定</h2>
       <ul>
-        <li>キャラの「ステータス」の<b>並び順</b>が、1本目・2本目…の色になります（例: HP → MP → SAN）。</li>
-        <li>チャットで <code>:HP-3</code> <code>:SAN=45</code> のように打つと、OBS 側もすぐに変わります。</li>
+        <li data-i18n>キャラの「ステータス」の<b>並び順</b>が、1本目・2本目…の色になります（例: HP → MP → SAN）。</li>
+        <li data-i18n>チャットで <code>:HP-3</code> <code>:SAN=45</code> のように打つと、OBS 側もすぐに変わります。</li>
         <li>「ステータスを隠す」にしたキャラは、持ち主以外にはバーが表示されません。</li>
       </ul>
       <h2>PC に入れたフォントを使うとき</h2>
       <ul>
         <li>フォント欄で「名前で指定（PCのフォント）」を選び、フォント名を入れます。Chrome / Edge では「一覧から選ぶ」で、PC に入っているフォントを見た目で選べます（初回はフォントの使用の許可を聞かれます）。</li>
-        <li>OBS は自分の PC のフォントで表示するので、<b>OBS を動かす PC にも同じフォントを入れてください</b>。入っていないと、ふつうのゴシック体になります。</li>
+        <li data-i18n>OBS は自分の PC のフォントで表示するので、<b>OBS を動かす PC にも同じフォントを入れてください</b>。入っていないと、ふつうのゴシック体になります。</li>
         <li>漢字が入っていないフォントでは、漢字の部分だけふつうのゴシック体になります（一覧の見本の「永」で確かめられます）。</li>
       </ul>
     </div>
@@ -579,20 +591,20 @@
 
 <footer>
   ブラウザだけで動く無料ツールです。作った CSS は自由に使えます。<br>
-  ココフォリアの画面の作りが変わると、表示が崩れることがあります。いずれのサービスとも関係のない<strong>非公式</strong>のツールです。<br>
+  <span data-i18n>ココフォリアの画面の作りが変わると、表示が崩れることがあります。いずれのサービスとも関係のない<strong>非公式</strong>のツールです。</span><br>
   <a href="https://shiki365.github.io/">ほかのツールも見る（shiki365 のツール置き場）</a> ・ <a href="https://shiki365.github.io/#contact">不具合の報告・感想</a> ・ <a href="https://sabunomisogi.booth.pm/items/8891048">開発を応援する（BOOTH）</a><br>
-  v1.5 ・ 最終更新 2026-09-24
+  <span>v1.6</span> ・ <span>最終更新</span> 2026-10-05
 </footer>
 
 <!-- ?v= keeps GitHub Pages' cache from mixing old and new files after an update -->
-<script src="presets.v1.js?v=4"></script>
+<script src="presets.v1.js?v=5"></script>
 <script src="shapes.v1.js?v=2"></script>
 <script src="items.v1.js?v=1"></script>
-<script src="model.v1.js?v=3"></script>
-<script src="deco.v1.js?v=3"></script>
-<script src="css.v1.js?v=4"></script>
-<script src="mock.v1.js?v=2"></script>
-<script src="pcfonts.v1.js?v=1"></script>
-<script src="app.v1.js?v=5"></script>
+<script src="model.v1.js?v=4"></script>
+<script src="deco.v1.js?v=4"></script>
+<script src="css.v1.js?v=5"></script>
+<script src="mock.v1.js?v=3"></script>
+<script src="pcfonts.v2.js"></script>
+<script src="app.v1.js?v=6"></script>
 </body>
 </html>

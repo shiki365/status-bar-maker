@@ -23,6 +23,10 @@
 (function () {
   "use strict";
 
+  // The comments in the CSS and the sample name follow the page's language (i18n.v1.js).
+  const t = (text, vars) => (window.I18n ? window.I18n.t(text, vars)
+    : vars ? text.replace(/\{(\w+)\}/g, (all, name) => (name in vars ? String(vars[name]) : all)) : text);
+
   const P = window.BarPresets, S = window.BarShapes;
 
   const SEL = {
@@ -96,7 +100,7 @@
   function pcFontNote(uses) {
     const names = [...new Set(uses.filter(([key]) => key === "pc").map(([, , name]) => pcName(name)).filter(Boolean))];
     if (!names.length) return [];
-    return ["   ■ PC のフォント（OBS を動かす PC にも入れてください）", `       ${safeComment(names.join(" / "))}`];
+    return [t("   ■ PC のフォント（OBS を動かす PC にも入れてください）"), `       ${safeComment(names.join(" / "))}`];
   }
 
   function fontImports(uses) {
@@ -266,7 +270,7 @@
         Object.assign(decls, { padding: "0.9em 0.3em 0.35em", background: `linear-gradient(transparent, ${rgba(N.bg, Math.max(N.bgAlpha, 0.6))})` });
       }
     }
-    w.comment("名前");
+    w.comment(t("名前"));
     w.add(host, decls);
   }
 
@@ -278,7 +282,7 @@
     const L = st.layout, B = st.bar, T = st.text, N = st.name, A = st.avatar, I = st.initiative;
     const d = S.path(B.shape, g.qW, L.height, B);
     const clip = `path("${d}")`;
-    const nameText = opts.name == null ? "探索者名" : String(opts.name);
+    const nameText = opts.name == null ? t("探索者名") : String(opts.name);
     const showName = N.pos !== "none" && nameText.trim() !== "" && !(N.pos === "avatar" && !A.show);
 
     const extra = new Writer();
@@ -315,14 +319,15 @@
     const design = P.DESIGNS[st.design];
     w.raw([
       "/* ==========================================================================",
-      "   ココフォリア → OBS  ステータスバー",
-      `   ステータスバーメーカーで作成${design ? `（ひな形: ${safeComment(design.label)}）` : ""}`,
+      t("   ココフォリア → OBS  ステータスバー"),
+      t("   ステータスバーメーカーで作成") + (design ? t("（ひな形: {label}）", { label: safeComment(t(design.label)) }) : ""),
       "   --------------------------------------------------------------------------",
-      "   ■ ブラウザソースのURL",
-      `       ${safeComment(opts.url || "https://ccfolia.com/rooms/{ルームID}/characters/{キャラクターID}")}`,
-      ...(opts.size ? ["   ■ ブラウザソースの大きさ", `       幅 ${opts.size.w} / 高さ ${opts.size.h}${opts.sizeNote ? `（${safeComment(opts.sizeNote)}）` : ""}`] : []),
-      "   ■ ココフォリア側",
-      "       キャラの「ステータス」の並び順が、上から1本目・2本目…の色になります。",
+      t("   ■ ブラウザソースのURL"),
+      `       ${safeComment(opts.url || t("https://ccfolia.com/rooms/{ルームID}/characters/{キャラクターID}"))}`,
+      ...(opts.size ? [t("   ■ ブラウザソースの大きさ"), t("       幅 {w} / 高さ {h}", { w: opts.size.w, h: opts.size.h })
+        + (opts.sizeNote ? t("（{note}）", { note: safeComment(opts.sizeNote) }) : "")] : []),
+      t("   ■ ココフォリア側"),
+      t("       キャラの「ステータス」の並び順が、上から1本目・2本目…の色になります。"),
       ...pcFontNote(uses),
       "   ========================================================================== */",
     ].join("\n"));
@@ -330,14 +335,14 @@
     const imports = fontImports(uses);
     if (imports.length) w.raw(imports.join("\n"));
 
-    w.raw(`\n/* ★キャラごとに変えるのはここだけ★ */\n:root {\n  --name: ${cssString(nameText)};  /* 名前。ダブルクォートは消さない */\n  --pc: ${opts.color || N.accent};  /* キャラの色 */\n}`);
+    w.raw(`\n/* ${t("★キャラごとに変えるのはここだけ★")} */\n:root {\n  --name: ${cssString(nameText)};  /* ${t("名前。ダブルクォートは消さない")} */\n  --pc: ${opts.color || N.accent};  /* ${t("キャラの色")} */\n}`);
 
-    w.comment("背景を透過して、余計なものを消す");
+    w.comment(t("背景を透過して、余計なものを消す"));
     w.add("html, body", { background: "transparent", margin: "0", padding: "0", overflow: "hidden" });
     w.add("::-webkit-scrollbar", { display: "none" });
     w.add(".MuiSnackbar-root", { display: "none" });
 
-    w.comment("全体の並び");
+    w.comment(t("全体の並び"));
     w.add(SEL.root, ctx.rootDecls);
     const nameSide = showName && N.pos === "left";
     w.add(SEL.wrap, {
@@ -349,7 +354,7 @@
       "align-items": A.show && A.pos !== "top" ? "center" : "flex-start", gap: A.show ? px(A.gap) : "0", margin: "0", padding: "0",
     });
 
-    w.comment("キャラのアイコン / イニシアチブ");
+    w.comment(t("キャラのアイコン / イニシアチブ"));
     if (A.show) {
       w.add(SEL.badge, { display: "inline-flex", flex: "none", margin: "0", position: "relative", overflow: "visible", "vertical-align": "top" });
       w.add(SEL.avatar, {
@@ -377,14 +382,14 @@
       w.add(SEL.initiative, { display: "none" });
     }
 
-    w.comment("バーの並び");
+    w.comment(t("バーの並び"));
     w.add(SEL.side, { flex: "none", display: "flex", "flex-direction": "column", gap: showName && N.pos === "barsTop" ? px(N.gap) : "0", margin: "0", padding: "0" });
     const barsDecl = { margin: "0", padding: "0", "max-width": "none", gap: px(L.gap) };
     if (L.direction === "grid") Object.assign(barsDecl, { display: "grid", "grid-template-columns": `repeat(${Math.min(L.columns, g.count)}, ${px(g.rowW)})` });
     else Object.assign(barsDecl, { display: "flex", "flex-direction": L.direction === "row" ? "row" : "column", "flex-wrap": "nowrap" });
     w.add(SEL.bars, barsDecl);
 
-    w.comment("1本ずつの色（上から1本目、2本目…）");
+    w.comment(t("1本ずつの色（上から1本目、2本目…）"));
     st.bars.forEach((b, i) => {
       const vars = { "--c1": b.c1, "--c2": b.c2 };
       if (g.iconCol > 0) vars["--icon"] = S.iconUrl(b.icon);
@@ -392,7 +397,7 @@
     });
     if (L.hideExtra) w.add(`${SEL.row}:nth-child(n+${g.count + 1})`, { display: "none" });
 
-    w.comment("バー1本ぶんの器");
+    w.comment(t("バー1本ぶんの器"));
     const tpl = rowTemplate(st, g);
     w.add(SEL.row, {
       display: "grid", "grid-template-areas": tpl.areas, "grid-template-columns": tpl.cols, "grid-template-rows": tpl.rows,
@@ -401,7 +406,7 @@
     });
     w.add(SEL.row + PART.text, { display: "contents" });
 
-    w.comment("ラベルと数値");
+    w.comment(t("ラベルと数値"));
     w.add([SEL.row + PART.label, SEL.row + PART.value], {
       position: "relative", "z-index": "2", display: "block", margin: "0", padding: "0", overflow: "visible",
       "white-space": "nowrap", "line-height": "1", "letter-spacing": `${T.spacing}em`, "text-shadow": textShadow(T),
@@ -446,7 +451,7 @@
       }, ["color"]);
     }
 
-    w.comment("バー本体（下地と、伸び縮みする部分）");
+    w.comment(t("バー本体（下地と、伸び縮みする部分）"));
     w.add(SEL.row + PART.box, {
       "grid-area": "q", position: "relative", width: px(g.qW), height: px(L.height), margin: "0", padding: "0",
       "box-sizing": "border-box", "align-self": "center", "z-index": "1", filter: ctx.baseFilter,
@@ -484,7 +489,7 @@
 
     if (g.itemCount) {
       const D = st.damage, size = px(D.size);
-      w.comment("横に置くアイテム（減ると壊れていく）");
+      w.comment(t("横に置くアイテム（減ると壊れていく）"));
       w.add(SEL.row + "::before", {
         content: '""', "grid-area": "i", display: "block", width: px(g.itemsW), height: size, "align-self": "center",
         "justify-self": D.side === "right" ? "end" : "start",
@@ -493,7 +498,7 @@
         "background-position": Array.from({ length: g.itemCount }, (_, j) => `${px(j * (D.size + D.itemGap))} 50%`).join(", "),
       });
     } else if (g.iconCol > 0) {
-      w.comment("アイコン");
+      w.comment(t("アイコン"));
       w.add(SEL.row + "::before", {
         content: '""', "grid-area": "i", display: "block", width: px(st.icons.size), height: px(st.icons.size), "align-self": "center",
         "justify-self": "start", "background-color": "var(--c1)",
@@ -505,7 +510,7 @@
     if (showName) nameRules(ctx, w);
 
     if (extra.out.length) {
-      w.comment("飾り");
+      w.comment(t("飾り"));
       w.out.push(...extra.out);
     }
     ctx.w = w;

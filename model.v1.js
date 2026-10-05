@@ -62,7 +62,8 @@
       design: "standard",
       layout: { count: 3, hideExtra: true },
       bars: Array.from({ length: MAX_BARS }, (_, i) => barItem(i)),
-      preview: { bg: "checker", character: "", statuses: clone(P.SAMPLE_STATUS), initiative: 12 },
+      // The sample statuses of the preview come in the page's language (i18n.v1.js).
+      preview: { bg: "checker", character: "", statuses: P.SAMPLE_STATUS.map(([label, now, max]) => [window.I18n ? window.I18n.t(label) : label, now, max]), initiative: 12 },
       characters: { room: "", list: [] },
       fileBase: "statusbar",
     };

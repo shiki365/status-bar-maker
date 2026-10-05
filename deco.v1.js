@@ -18,6 +18,9 @@
 (function () {
   "use strict";
 
+  const t = (text, vars) => (window.I18n ? window.I18n.t(text, vars)
+    : vars ? text.replace(/\{(\w+)\}/g, (all, name) => (name in vars ? String(vars[name]) : all)) : text);
+
   const DECOS = {
     panel(ctx, o) {
       const { rgba, px, S } = ctx;
@@ -206,7 +209,7 @@
     const { st, w, SEL, PART, g } = ctx, D = st.damage, I = window.BarItems;
     if (!D || !I || (!D.cracks && !g.itemCount)) return;
 
-    w.comment("減るほど壊れていく（絵は1本ずつ）");
+    w.comment(t("減るほど壊れていく（絵は1本ずつ）"));
     st.bars.slice(0, g.count).forEach((b, i) => {
       const vars = {};
       if (g.itemCount) I.frames(b.item, b).forEach((url, f) => { vars[`--i${f}`] = url; });
@@ -215,7 +218,7 @@
     });
 
     if (D.cracks) {
-      w.comment("バーのひび");
+      w.comment(t("バーのひび"));
       // Every stage restates the whole overlay; long images (the border) go into variables written once.
       const base = ctx.overlayLayers.map((l, i) => (l.image.startsWith("url(") ? Object.assign({}, l, { image: `var(--ov${i})`, raw: l.image }) : l));
       const saved = base.filter(l => l.raw);
@@ -234,7 +237,7 @@
     }
 
     if (g.itemCount) {
-      w.comment("アイテムが壊れていく（右から順に）");
+      w.comment(t("アイテムが壊れていく（右から順に）"));
       const n = g.itemCount, keys = [];
       // Item j (1..n) holds the share (j-1)/n .. j/n of the bar; f = how much of that share is left.
       // Frame k (1..4) begins when f <= (4-k)/4, i.e. when the remaining width p <= t.
@@ -262,7 +265,7 @@
   function alerts(ctx) {
     const { st, w, SEL, PART, row, g } = ctx, A = st.alert;
 
-    w.comment("数値が赤くなるとき（ココフォリアは最大値の80%以下で赤くします）");
+    w.comment(t("数値が赤くなるとき（ココフォリアは最大値の80%以下で赤くします）"));
     const red = `${SEL.row}${PART.current}[color="secondary"]`;
     if (A.red80) {
       w.add(red, { color: A.redColor, animation: A.redBlink ? "sb-blink 1.2s steps(1) infinite" : "none" });
@@ -277,7 +280,7 @@
       const has = fillIs(below(at));
       const rows = targets.length === g.count ? [SEL.row] : targets.map(i => row(i));
       const low = rows.map(s => s + has);
-      w.comment(`ピンチ（残り${at}%未満）`);
+      w.comment(t("ピンチ（残り{at}%未満）", { at }));
       if (A.lowFill) w.add(low, { "--c1": A.lowColor, "--c2": `color-mix(in srgb, ${A.lowColor} 55%, #000)` });
       if (A.lowText) w.add(low.flatMap(s => [s + PART.value, s + PART.current]), { color: A.lowColor });
       if (A.lowPulse) {
@@ -297,7 +300,7 @@
 
     if (A.zeroOn && (A.zeroGray || A.zeroBlink)) {
       const zero = SEL.row + fillIs(ZERO);
-      w.comment("0になったとき");
+      w.comment(t("0になったとき"));
       if (A.zeroGray) w.add(zero, { filter: "grayscale(1) brightness(0.8)" });
       if (A.zeroBlink) {
         w.add([zero + PART.label, zero + PART.value], { animation: "sb-blink 1s steps(1) infinite" });
