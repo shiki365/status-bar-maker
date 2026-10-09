@@ -255,8 +255,8 @@
         </div>
         <input type="text" data-bind="characters.list.${i}.url" placeholder="${esc(t("キャラクターID、またはコマのURL"))}" aria-label="${esc(t("{n}人目のキャラクターID", { n: i + 1 }))}">
         <div class="btns">
-          <button type="button" data-char-action="css">${esc(t("CSS をコピー"))}</button>
-          <button type="button" data-char-action="url">${esc(t("URL をコピー"))}</button>
+          <button type="button" data-char-action="url">${esc(t("① URL をコピー"))}</button>
+          <button type="button" data-char-action="css">${esc(t("② CSS をコピー"))}</button>
           <button type="button" data-char-action="preview">${esc(t("プレビュー"))}</button>
         </div>
         <span class="warn" data-char-note></span>
@@ -315,7 +315,7 @@
     } else if (action === "url") {
       const url = charUrl(c);
       if (!url) { status(t("ルームの URL とキャラクター ID の両方が必要です。"), true); return; }
-      copyText(url).then(ok => status(ok ? t("「{name}」の URL をコピーしました。", { name: c.name || t("名前なし") }) : t("コピーできませんでした。"), !ok));
+      copyText(url).then(ok => status(ok ? t("「{name}」の URL をコピーしました。", { name: c.name || t("名前なし") }) + t("OBS のブラウザソースの「URL」に貼り付けてください。") : t("コピーできませんでした。"), !ok));
     } else if (action === "css" || action === "preview") {
       state.preview.character = c.id;
       fillPreviewSelect();
@@ -446,7 +446,11 @@
     copyText(css).then(ok => {
       if (!ok) { status(t("コピーできませんでした。下の「書き出す CSS を見る」から選んでコピーしてください。"), true); return; }
       const who = c ? t("「{name}」の", { name: c.name || t("名前なし") }) : t("サンプルの");
-      status(who + t(" CSS をコピーしました。OBS のブラウザソース（幅 {w} × 高さ {h}）のカスタム CSS に貼り付けてください。", { w: lastSize.w, h: lastSize.h }));
+      // The source's URL picks the character; the CSS only carries the look, the name and the colour.
+      const also = !c ? "" : charUrl(c)
+        ? t("ソースの URL も「{name}」のものにしてください（映るキャラは URL で決まります）。", { name: c.name || t("名前なし") })
+        : t("キャラクター ID が入っていないので、URL はまだ作れません（映るキャラは OBS のソースの URL で決まります）。");
+      status(who + t(" CSS をコピーしました。OBS のブラウザソース（幅 {w} × 高さ {h}）のカスタム CSS に貼り付けてください。", { w: lastSize.w, h: lastSize.h }) + also);
     });
   }
 

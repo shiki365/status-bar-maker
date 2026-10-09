@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <script src="i18n.v1.js"></script>
-<script src="lang.en.v1.js"></script>
-<script src="lang.ko.v1.js"></script>
+<script src="lang.en.v1.js?v=2"></script>
+<script src="lang.ko.v1.js?v=2"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ステータスバーメーカー | ココフォリア × OBS</title>
 <meta name="description" content="ココフォリアのキャラのHP・MP・SANなどを、OBSに好きなデザインで映すためのカスタムCSSを作るツールです。形・色・文字・名前・ピンチや減るほど壊れていく演出を選んで、CSSをコピーするだけ。">
@@ -494,7 +494,7 @@
         <legend>キャラ</legend>
         <div id="charList"></div>
         <div class="row wide"><span class="btns"><button type="button" id="addChar">キャラを追加</button></span></div>
-        <p class="desc" data-i18n>キャラクター ID は、盤面のコマを右クリック →「Copy Id (for dev)」でコピーできます。コマの URL をそのまま貼っても構いません。<br>「CSS をコピー」を押すと、そのキャラの名前と色を書き込んだ CSS がコピーされます。</p>
+        <p class="desc" data-i18n>キャラクター ID は、盤面のコマを右クリック →「Copy Id (for dev)」でコピーできます。コマの URL をそのまま貼っても構いません。<br><b>OBS に映るキャラは、ブラウザソースの URL で決まります</b>（CSS が変えるのは、見た目と名前・色だけです）。キャラごとに新しいブラウザソースを作り、「① URL をコピー」を URL に、「② CSS をコピー」をカスタム CSS に貼り付けてください。</p>
       </fieldset>
 
       <fieldset>
@@ -593,7 +593,7 @@
   ブラウザだけで動く無料ツールです。作った CSS は自由に使えます。<br>
   <span data-i18n>ココフォリアの画面の作りが変わると、表示が崩れることがあります。いずれのサービスとも関係のない<strong>非公式</strong>のツールです。</span><br>
   <a href="https://shiki365.github.io/">ほかのツールも見る（shiki365 のツール置き場）</a> ・ <a href="https://shiki365.github.io/#contact">不具合の報告・感想</a> ・ <a href="https://sabunomisogi.booth.pm/items/8891048">開発を応援する（BOOTH）</a><br>
-  <span>v1.6</span> ・ <span>最終更新</span> 2026-10-05
+  <span>v1.7</span> ・ <span>最終更新</span> 2026-10-09
 </footer>
 
 <!-- ?v= keeps GitHub Pages' cache from mixing old and new files after an update -->
@@ -605,6 +605,6 @@
 <script src="css.v1.js?v=5"></script>
 <script src="mock.v1.js?v=3"></script>
 <script src="pcfonts.v2.js"></script>
-<script src="app.v1.js?v=6"></script>
+<script src="app.v1.js?v=7"></script>
 </body>
 </html>
